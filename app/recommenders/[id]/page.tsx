@@ -1,6 +1,7 @@
 import { db } from "../../firebase";
 import OwnerControls from "../../components/OwnerControls";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import QRCodeCard from "../../components/QRCodeCard";
 
 type Recommender = {
   name: string;
@@ -139,6 +140,8 @@ export default async function RecommenderPage({ params }: PageProps) {
             </div>
           )}
         </section>
+
+        <QRCodeCard url={`https://goodshare-app.vercel.app/recommenders/${id}`} />
 
         <OwnerControls
           type="profile"
