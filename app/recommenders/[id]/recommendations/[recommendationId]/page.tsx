@@ -109,7 +109,7 @@ export default async function RecommendationPage({ params }: PageProps) {
 
           <div className="mt-6">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-              Why this is recommended
+              Why I recommend this
             </p>
             <p className="mt-2 text-sm leading-6 text-gray-700">
               {recommendation.description}
@@ -129,8 +129,9 @@ export default async function RecommendationPage({ params }: PageProps) {
         </section>
 
         <QRCodeCard
-          url={`https://goodshare-app.vercel.app/recommenders/${id}/recommendations/${recommendationId}`}
-        />
+  url={`https://goodshare-app.vercel.app/recommenders/${id}/recommendations/${recommendationId}`}
+  title="Share this recommendation"
+/>
 
         <OwnerControls
           type="recommendation"
