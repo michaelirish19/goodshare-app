@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 type Recommender = {
@@ -16,7 +16,7 @@ type HomeDirectoryProps = {
   categories: string[];
 };
 
-export default function HomeDirectory({
+function HomeDirectoryContent({
   recommenders,
   categories,
 }: HomeDirectoryProps) {
@@ -58,7 +58,6 @@ export default function HomeDirectory({
 
   return (
     <>
-      {/* CATEGORY FILTER */}
       <section className="mb-10">
         <h2 className="text-xl font-semibold">Browse Categories</h2>
         <p className="mb-2 mt-1 text-sm text-gray-500">Filter by category</p>
@@ -97,7 +96,6 @@ export default function HomeDirectory({
         </div>
       </section>
 
-      {/* RECOMMENDERS */}
       <section className="mb-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -149,14 +147,12 @@ export default function HomeDirectory({
                     {recommender.role}
                   </p>
 
-                  {/* ✅ DESCRIPTION ADDED HERE */}
                   {recommender.description && (
                     <p className="mt-2 text-sm text-gray-600 line-clamp-3">
                       {recommender.description}
                     </p>
                   )}
 
-                  {/* CATEGORIES */}
                   <div className="mt-3 flex flex-wrap gap-2">
                     {parsedCategories.map((category) => (
                       <button
@@ -177,7 +173,6 @@ export default function HomeDirectory({
                     ))}
                   </div>
 
-                  {/* CTA */}
                   <a
                     href={`/recommenders/${recommender.id}`}
                     className="mt-4 inline-block rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
@@ -195,5 +190,13 @@ export default function HomeDirectory({
         )}
       </section>
     </>
+  );
+}
+
+export default function HomeDirectory(props: HomeDirectoryProps) {
+  return (
+    <Suspense fallback={<div className="mt-6 text-sm text-gray-500">Loading...</div>}>
+      <HomeDirectoryContent {...props} />
+    </Suspense>
   );
 }

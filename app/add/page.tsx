@@ -2,8 +2,8 @@
 
 export const dynamic = "force-dynamic";
 
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
 import { db } from "../firebase";
 import { collection, addDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 
@@ -14,7 +14,7 @@ type Recommender = {
   userId?: string;
 };
 
-export default function AddRecommendationPage() {
+function AddRecommendationPageContent() {
   const searchParams = useSearchParams();
   const recommenderId = searchParams.get("recommenderId");
   const router = useRouter();
@@ -240,5 +240,19 @@ export default function AddRecommendationPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function AddRecommendationPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-white px-6 py-10 text-black">
+          <div className="mx-auto max-w-xl">Loading...</div>
+        </main>
+      }
+    >
+      <AddRecommendationPageContent />
+    </Suspense>
   );
 }
