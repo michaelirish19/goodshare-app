@@ -1,6 +1,6 @@
 import { db } from "../../firebase";
 import OwnerControls from "../../components/OwnerControls";
-import CopyRecommendationLinkButton from "../../components/CopyRecommendationLinkButton";
+import RecommendationCardQR from "../../components/RecommendationCardQR";
 import QRCodeCard from "../../components/QRCodeCard";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 
@@ -195,9 +195,9 @@ export default async function RecommenderPage({ params }: PageProps) {
                             View Details
                           </a>
 
-                          <CopyRecommendationLinkButton
-                            url={`https://goodshare-app.vercel.app/recommenders/${id}/recommendations/${item.id}`}
-                          />
+                          <RecommendationCardQR
+  url={`https://goodshare-app.vercel.app/recommenders/${id}/recommendations/${item.id}`}
+/>
 
                           <OwnerControls
                             type="recommendation"
