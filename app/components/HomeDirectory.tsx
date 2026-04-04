@@ -25,10 +25,15 @@ function HomeDirectoryContent({
 
   const [selectedCategory, setSelectedCategory] = useState(urlCategory);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
   useEffect(() => {
     setSelectedCategory(urlCategory);
   }, [urlCategory]);
+
+  const visibleCategories = showAllCategories
+    ? categories
+    : categories.slice(0, 10);
 
   const filteredRecommenders = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -77,7 +82,7 @@ function HomeDirectoryContent({
             All
           </button>
 
-          {categories.map((category) => (
+          {visibleCategories.map((category) => (
             <button
               key={category}
               onClick={() => {
@@ -94,6 +99,16 @@ function HomeDirectoryContent({
             </button>
           ))}
         </div>
+
+        {categories.length > 10 && (
+          <button
+            type="button"
+            onClick={() => setShowAllCategories((prev) => !prev)}
+            className="mt-3 text-sm text-gray-600 underline"
+          >
+            {showAllCategories ? "Show less" : "Show more"}
+          </button>
+        )}
       </section>
 
       <section className="mb-10">
@@ -195,7 +210,9 @@ function HomeDirectoryContent({
 
 export default function HomeDirectory(props: HomeDirectoryProps) {
   return (
-    <Suspense fallback={<div className="mt-6 text-sm text-gray-500">Loading...</div>}>
+    <Suspense
+      fallback={<div className="mt-6 text-sm text-gray-500">Loading...</div>}
+    >
       <HomeDirectoryContent {...props} />
     </Suspense>
   );
