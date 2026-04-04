@@ -164,7 +164,14 @@ export default async function RecommenderPage({ params }: PageProps) {
                         key={item.id}
                         className="rounded-xl border border-gray-200 p-4"
                       >
-                        <h4 className="text-lg font-semibold">{item.title}</h4>
+                        <h4 className="text-lg font-semibold">
+  <a
+    href={`/recommenders/${id}/recommendations/${item.id}`}
+    className="hover:underline"
+  >
+    {item.title}
+  </a>
+</h4>
 
                         <p className="mt-2 text-sm leading-6 text-gray-700">
                           {item.description}
@@ -179,6 +186,13 @@ export default async function RecommenderPage({ params }: PageProps) {
                           >
                             View Product
                           </a>
+
+                          <a
+  href={`/recommenders/${id}/recommendations/${item.id}`}
+  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+>
+  View Details
+</a>
 
                           <OwnerControls
                             type="recommendation"
