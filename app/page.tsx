@@ -1,5 +1,6 @@
 import AuthStatus from "./components/AuthStatus";
 import HomepageActions from "./components/HomepageActions";
+import JoinGoodShareButton from "./components/JoinGoodShareButton";
 import HomeDirectory from "./components/HomeDirectory";
 import { db } from "./firebase";
 import { collection, getDocs } from "firebase/firestore";
@@ -50,7 +51,10 @@ export default async function Home() {
             </p>
           </div>
 
-          <AuthStatus />
+          <div className="flex items-center gap-3">
+  <JoinGoodShareButton />
+  <AuthStatus />
+</div>
         </header>
 
         <HomepageActions />
