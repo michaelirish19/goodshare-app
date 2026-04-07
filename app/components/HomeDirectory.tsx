@@ -2,6 +2,8 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase";
 
 type Recommender = {
   id: string;
@@ -11,25 +13,50 @@ type Recommender = {
   description?: string;
 };
 
-type HomeDirectoryProps = {
-  recommenders: Recommender[];
-  categories: string[];
-};
-
-function HomeDirectoryContent({
-  recommenders,
-  categories,
-}: HomeDirectoryProps) {
+function HomeDirectoryContent() {
   const searchParams = useSearchParams();
   const urlCategory = searchParams.get("category") || "All";
 
+  const [recommenders, setRecommenders] = useState<Recommender[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(urlCategory);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAllCategories, setShowAllCategories] = useState(false);
 
   useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "recommenders"), (snapshot) => {
+      const nextRecommenders: Recommender[] = snapshot.docs.map((doc) => {
+        const data = doc.data() as Omit<Recommender, "id">;
+
+        return {
+          id: doc.id,
+          ...data,
+        };
+      });
+
+      setRecommenders(nextRecommenders);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     setSelectedCategory(urlCategory);
   }, [urlCategory]);
+
+  const categories = useMemo(() => {
+    return Array.from(
+      new Set(
+        recommenders.flatMap((recommender) =>
+          recommender.categories
+            .split("•")
+            .map((category) => category.trim())
+            .filter(Boolean)
+        )
+      )
+    ).sort((a, b) => a.localeCompare(b));
+  }, [recommenders]);
 
   const visibleCategories = showAllCategories
     ? categories
@@ -60,6 +87,10 @@ function HomeDirectoryContent({
       return matchesCategory && matchesSearch;
     });
   }, [recommenders, selectedCategory, searchTerm]);
+
+  if (loading) {
+    return <div className="mt-6 text-sm text-gray-500">Loading...</div>;
+  }
 
   return (
     <>
@@ -208,12 +239,12 @@ function HomeDirectoryContent({
   );
 }
 
-export default function HomeDirectory(props: HomeDirectoryProps) {
+export default function HomeDirectory() {
   return (
     <Suspense
       fallback={<div className="mt-6 text-sm text-gray-500">Loading...</div>}
     >
-      <HomeDirectoryContent {...props} />
+      <HomeDirectoryContent />
     </Suspense>
   );
 }
