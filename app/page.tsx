@@ -5,9 +5,9 @@ import HomeDirectory from "./components/HomeDirectory";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-white px-6 py-10 text-black">
+    <main className="min-h-screen overflow-x-hidden bg-white px-4 py-10 text-black sm:px-6">
       <div className="mx-auto max-w-3xl">
-        <header className="mb-10 flex items-start justify-between gap-4">
+        <header className="mb-10 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <h1 className="text-4xl font-bold tracking-tight">GoodShare</h1>
             <p className="mt-3 text-lg text-gray-700">
@@ -19,9 +19,9 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <JoinGoodShareButton />
-            <AuthStatus />
+          <div className="flex flex-wrap items-center gap-3 md:justify-end">
+             <JoinGoodShareButton />
+             <AuthStatus />
           </div>
         </header>
 
