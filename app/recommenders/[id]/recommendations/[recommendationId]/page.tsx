@@ -118,13 +118,13 @@ export default async function RecommendationPage({ params }: PageProps) {
 
           <div className="mt-6 flex flex-wrap gap-3">
             <a
-              href={recommendation.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
-            >
-              View Product
-            </a>
+  href={`/out/${id}/${recommendationId}`}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+>
+  View Product
+</a>
           </div>
         </section>
 
