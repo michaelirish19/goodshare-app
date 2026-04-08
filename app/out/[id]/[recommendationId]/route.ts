@@ -34,14 +34,19 @@ export async function GET(request: NextRequest, context: RouteContext) {
       category?: string;
     };
 
-    const targetUrl = recommendation.affiliateLink || recommendation.link;
+    const rawTargetUrl = recommendation.affiliateLink || recommendation.link;
 
-    if (!targetUrl) {
+    if (!rawTargetUrl) {
       return NextResponse.redirect(
         new URL(`/recommenders/${id}/recommendations/${recommendationId}`, request.url),
         { status: 302 }
       );
     }
+
+    const targetUrl =
+      rawTargetUrl.startsWith("http://") || rawTargetUrl.startsWith("https://")
+        ? rawTargetUrl
+        : `https://${rawTargetUrl}`;
 
     const forwardedFor = request.headers.get("x-forwarded-for");
     const ip = forwardedFor?.split(",")[0]?.trim() || null;
