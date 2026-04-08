@@ -10,6 +10,8 @@ type RouteContext = {
 };
 
 export async function GET(request: NextRequest, context: RouteContext) {
+  let targetUrl = "";
+
   try {
     const { id, recommendationId } = await context.params;
 
@@ -43,7 +45,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const targetUrl =
+    targetUrl =
       rawTargetUrl.startsWith("http://") || rawTargetUrl.startsWith("https://")
         ? rawTargetUrl
         : `https://${rawTargetUrl}`;
@@ -53,37 +55,48 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const userAgent = request.headers.get("user-agent") || null;
     const referer = request.headers.get("referer") || null;
 
-    const clickRef = adminDb.collection("outboundClicks").doc();
+    try {
+      const clickRef = adminDb.collection("outboundClicks").doc();
+      const batch = adminDb.batch();
 
-    const batch = adminDb.batch();
+      batch.set(clickRef, {
+        recommenderId: id,
+        recommendationId,
+        targetUrl,
+        recommendationTitle: recommendation.title || null,
+        category: recommendation.category || null,
+        userAgent,
+        referer,
+        ip,
+        createdAt: FieldValue.serverTimestamp(),
+      });
 
-    batch.set(clickRef, {
-      recommenderId: id,
-      recommendationId,
-      targetUrl,
-      recommendationTitle: recommendation.title || null,
-      category: recommendation.category || null,
-      userAgent,
-      referer,
-      ip,
-      createdAt: FieldValue.serverTimestamp(),
-    });
+      batch.update(recommendationRef, {
+        outboundClickCount: FieldValue.increment(1),
+        lastOutboundClickAt: FieldValue.serverTimestamp(),
+      });
 
-    batch.update(recommendationRef, {
-      outboundClickCount: FieldValue.increment(1),
-      lastOutboundClickAt: FieldValue.serverTimestamp(),
-    });
+      batch.update(recommenderRef, {
+        totalOutboundClickCount: FieldValue.increment(1),
+        lastOutboundClickAt: FieldValue.serverTimestamp(),
+      });
 
-    batch.update(recommenderRef, {
-      totalOutboundClickCount: FieldValue.increment(1),
-      lastOutboundClickAt: FieldValue.serverTimestamp(),
-    });
+      await batch.commit();
+    } catch (loggingError) {
+      console.error("Outbound click logging failed:", loggingError);
+    }
 
-    await batch.commit();
-
-    return NextResponse.redirect(targetUrl, { status: 302 });
+    return NextResponse.redirect(new URL(targetUrl), { status: 302 });
   } catch (error) {
     console.error("Outbound redirect failed:", error);
+
+    if (targetUrl) {
+      try {
+        return NextResponse.redirect(new URL(targetUrl), { status: 302 });
+      } catch {
+        // fall through to site homepage only if targetUrl itself is invalid
+      }
+    }
 
     return NextResponse.redirect(new URL("/", request.url), {
       status: 302,
