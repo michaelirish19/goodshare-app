@@ -13,7 +13,6 @@ export default function QRCodeCard({
   title = "Share this profile",
 }: Props) {
   const [showQR, setShowQR] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const handleDownload = () => {
     const canvas = document.getElementById("qr-code") as HTMLCanvasElement;
@@ -29,20 +28,6 @@ export default function QRCodeCard({
     link.click();
   };
 
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-
-      setTimeout(() => {
-        setCopied(false);
-      }, 2000);
-    } catch (error) {
-      console.error("Could not copy link:", error);
-      alert("Could not copy link.");
-    }
-  };
-
   return (
     <div className="mt-6 rounded-xl border border-gray-200 p-4">
       <h3 className="text-sm font-semibold text-gray-700">{title}</h3>
@@ -55,13 +40,7 @@ export default function QRCodeCard({
           >
             Generate QR Code
           </button>
-
-          <button
-            onClick={handleCopyLink}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100"
-          >
-            {copied ? "Link Copied!" : "Copy Link"}
-          </button>
+        
         </div>
       ) : (
         <div className="mt-4 flex flex-col items-center gap-3">
@@ -75,12 +54,6 @@ export default function QRCodeCard({
               Download QR Code
             </button>
 
-            <button
-              onClick={handleCopyLink}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100"
-            >
-              {copied ? "Link Copied!" : "Copy Link"}
-            </button>
           </div>
 
           <button
