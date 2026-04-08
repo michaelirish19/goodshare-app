@@ -129,7 +129,7 @@ export default async function RecommendationPage({ params }: PageProps) {
         </section>
 
         <QRCodeCard
-  url={`https://goodshare-app.vercel.app/recommenders/${id}/recommendations/${recommendationId}`}
+  url={`https://goodshare-app.vercel.app/go/${id}/${recommendationId}`}
   title="Share this recommendation"
 />
 

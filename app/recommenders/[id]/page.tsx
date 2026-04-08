@@ -196,7 +196,7 @@ export default async function RecommenderPage({ params }: PageProps) {
                           </a>
 
                           <RecommendationCardQR
-  url={`https://goodshare-app.vercel.app/recommenders/${id}/recommendations/${item.id}`}
+  url={`https://goodshare-app.vercel.app/go/${id}/${item.id}`}
 />
 
                           <OwnerControls
