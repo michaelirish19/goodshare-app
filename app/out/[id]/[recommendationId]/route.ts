@@ -87,19 +87,17 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }
 
     return NextResponse.redirect(new URL(targetUrl), { status: 302 });
-  } catch (error) {
+   } catch (error) {
     console.error("Outbound redirect failed:", error);
 
-    if (targetUrl) {
-      try {
-        return NextResponse.redirect(new URL(targetUrl), { status: 302 });
-      } catch {
-        // fall through to site homepage only if targetUrl itself is invalid
-      }
-    }
-
-    return NextResponse.redirect(new URL("/", request.url), {
-      status: 302,
-    });
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Outbound redirect failed",
+        targetUrl,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
   }
 }
