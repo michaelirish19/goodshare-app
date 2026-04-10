@@ -13,6 +13,15 @@ type PreviewData = {
   siteName: string;
 };
 
+const CATEGORY_OPTIONS = [
+  "Product",
+  "Tools",
+  "Gear",
+  "Clothes",
+  "Accessories",
+  "Other",
+];
+
 function isValidUrl(value: string) {
   try {
     new URL(value);
@@ -67,6 +76,73 @@ function prettyHostname(rawUrl: string) {
   }
 }
 
+function inferCategory(rawUrl: string) {
+  try {
+    const url = new URL(rawUrl);
+    const host = url.hostname.replace(/^www\./, "").toLowerCase();
+
+    if (
+      host.includes("youtube.com") ||
+      host.includes("youtu.be") ||
+      host.includes("vimeo.com")
+    ) {
+      return "Video";
+    }
+
+    if (
+  host.includes("homedepot.com") ||
+  host.includes("lowes.com") ||
+  host.includes("harborfreight.com")
+) {
+  return "Tools";
+}
+
+if (
+  host.includes("rei.com") ||
+  host.includes("backcountry.com") ||
+  host.includes("cabelas.com")
+) {
+  return "Gear";
+}
+
+if (
+  host.includes("nike.com") ||
+  host.includes("adidas.com") ||
+  host.includes("uniqlo.com")
+) {
+  return "Clothes";
+}
+
+if (
+  host.includes("amazon.") ||
+  host.includes("etsy.com") ||
+  host.includes("ebay.com") ||
+  host.includes("walmart.com") ||
+  host.includes("target.com")
+) {
+  return "Product";
+}
+
+    if (
+      host.includes("medium.com") ||
+      host.includes("substack.com")
+    ) {
+      return "Article";
+    }
+
+    if (
+      host.includes("spotify.com") ||
+      host.includes("podcasts.apple.com")
+    ) {
+      return "Podcast";
+    }
+
+    return "Other";
+  } catch {
+    return "Other";
+  }
+}
+
 export default function AddRecommendationPage() {
   const router = useRouter();
 
@@ -76,6 +152,7 @@ export default function AddRecommendationPage() {
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
+  const [category, setCategory] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFetchingPreview, setIsFetchingPreview] = useState(false);
@@ -178,8 +255,11 @@ export default function AddRecommendationPage() {
 
     if (!urlLooksValid) {
       setPreview(null);
+      setCategory("");
       return;
     }
+
+    setCategory(inferCategory(normalizedUrl));
 
     const timer = setTimeout(() => {
       fetchPreview(normalizedUrl);
@@ -218,13 +298,13 @@ export default function AddRecommendationPage() {
     setIsSubmitting(true);
 
     try {
-      await addDoc(collection(db, "recommendations"), {
+      await addDoc(collection(db, "recommenders", userId, "recommendations"), {
         recommenderId: userId,
         userId,
         url: normalizedUrl,
         title: finalTitle,
         description: notes.trim(),
-        category: "",
+        category,
         siteName: preview?.siteName || hostname || "",
         image: preview?.image || "",
         createdAt: serverTimestamp(),
@@ -240,8 +320,8 @@ export default function AddRecommendationPage() {
       setShowOptionalFields(false);
 
       setTimeout(() => {
-        router.push("/profile");
-      }, 700);
+  router.push(`/recommenders/${userId}`);
+}, 700);
     } catch (err) {
       console.error(err);
       setError("Something went wrong while saving. Please try again.");
@@ -324,6 +404,29 @@ export default function AddRecommendationPage() {
                       {preview?.description || hostname}
                     </p>
                   )}
+
+                 <div className="mt-3">
+  <p className="mb-2 text-xs font-medium text-neutral-500">
+  Choose a category (auto-selected)
+</p>
+
+  <div className="flex flex-wrap gap-2">
+    {CATEGORY_OPTIONS.map((option) => (
+      <button
+        key={option}
+        type="button"
+        onClick={() => setCategory(option)}
+        className={
+          option === category
+            ? "inline-flex items-center rounded-full bg-neutral-900 px-3 py-1 text-xs font-semibold text-white"
+            : "inline-flex items-center rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs font-medium text-neutral-700"
+        }
+      >
+        {option}
+      </button>
+    ))}
+  </div>
+</div>
                 </div>
 
                 {preview?.image ? (
@@ -416,7 +519,7 @@ export default function AddRecommendationPage() {
 
             <button
               type="button"
-              onClick={() => router.push("/profile")}
+              onClick={() => router.push(`/recommenders/${userId}`)}
               className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-neutral-300 px-5 py-3 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
             >
               Cancel

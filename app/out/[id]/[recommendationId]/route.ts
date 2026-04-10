@@ -30,13 +30,18 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }
 
     const recommendation = recommendationSnap.data() as {
-      link?: string;
-      affiliateLink?: string;
-      title?: string;
-      category?: string;
-    };
+  url?: string;
+  link?: string;
+  affiliateLink?: string;
+  title?: string;
+  category?: string;
+};
 
-    const rawTargetUrl = recommendation.affiliateLink || recommendation.link;
+const rawTargetUrl =
+  recommendation.url || recommendation.affiliateLink || recommendation.link;
+
+  console.log("OUT ROUTE recommendation data:", recommendation);
+console.log("OUT ROUTE rawTargetUrl:", rawTargetUrl);
 
     if (!rawTargetUrl) {
       return NextResponse.redirect(
