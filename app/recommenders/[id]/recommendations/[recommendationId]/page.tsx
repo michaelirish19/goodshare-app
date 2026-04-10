@@ -1,6 +1,7 @@
 import { db } from "../../../../firebase";
 import OwnerControls from "../../../../components/OwnerControls";
 import QRCodeCard from "../../../../components/QRCodeCard";
+import LinkPreviewCard from "../../../../components/LinkPreviewCard";
 import { doc, getDoc } from "firebase/firestore";
 
 type Recommender = {
@@ -14,8 +15,10 @@ type Recommender = {
 type Recommendation = {
   title: string;
   description: string;
-  link: string;
+  url: string;
   category: string;
+  image?: string;
+  siteName?: string;
 };
 
 type PageProps = {
@@ -77,6 +80,7 @@ export default async function RecommendationPage({ params }: PageProps) {
   }
 
   const recommendation = recommendationSnap.data() as Recommendation;
+  console.log("Recommendation data:", recommendationSnap.data());
 
   return (
     <main className="min-h-screen bg-white px-6 py-10 text-black">
@@ -100,6 +104,14 @@ export default async function RecommendationPage({ params }: PageProps) {
           </p>
 
           <h1 className="mt-2 text-3xl font-bold">{recommendation.title}</h1>
+
+          <LinkPreviewCard
+  url={recommendation.url}
+  fallbackTitle={recommendation.title}
+  fallbackDescription={recommendation.description}
+  fallbackImage={recommendation.image}
+  fallbackSiteName={recommendation.siteName}
+/>
 
           <div className="mt-4 flex flex-wrap gap-2">
             <span className="rounded-full border border-gray-300 px-3 py-1 text-sm text-gray-700">
