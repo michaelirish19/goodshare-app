@@ -24,7 +24,6 @@ export default function HomepageActions() {
       try {
         const profileRef = doc(db, "recommenders", currentUser.uid);
         const profileSnap = await getDoc(profileRef);
-
         setHasProfile(profileSnap.exists());
       } catch (error) {
         console.error("Error checking homepage profile state:", error);
@@ -38,89 +37,64 @@ export default function HomepageActions() {
   }, []);
 
   if (checkingUser) {
-    return (
-      <div className="mb-8 rounded-xl border border-gray-200 p-4">
-        <p className="text-sm text-gray-600">Loading...</p>
-      </div>
-    );
+    return <div className="h-10" />;
   }
 
+  // ── Logged out: primary CTA ──
   if (!user) {
     return (
-      <section className="mb-8 rounded-xl border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold">Join GoodShare</h2>
-        <p className="mt-2 text-sm text-gray-600">
-          Create an account to build your recommender profile and share what you
-          trust.
-        </p>
-
-        <div className="mt-4 flex gap-3">
-          <Link
-            href="/signup"
-            className="rounded bg-black px-4 py-2 text-sm text-white"
-          >
-            Sign Up
-          </Link>
-
-          <Link
-            href="/login"
-            className="rounded border border-gray-300 px-4 py-2 text-sm"
-          >
-            Log In
-          </Link>
-        </div>
-      </section>
-    );
-  }
-
-  if (!hasProfile) {
-    return (
-      <section className="mb-8 rounded-xl border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold">Complete Your Profile</h2>
-        <p className="mt-2 text-sm text-gray-600">
-          Finish setting up your recommender profile so people can discover your
-          recommendations.
-        </p>
-
+      <div className="flex flex-wrap gap-3">
         <Link
-          href="/create-profile"
-          className="mt-4 inline-block rounded bg-black px-4 py-2 text-sm text-white"
+          href="/signup"
+          className="rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:opacity-80"
         >
-          Complete Profile
+          Get started — it&apos;s free
         </Link>
-      </section>
-    );
-  }
-
-  return (
-    <section className="mb-8 rounded-xl border border-gray-200 p-6">
-      <h2 className="text-xl font-semibold">Your Profile</h2>
-      <p className="mt-2 text-sm text-gray-600">
-        Manage your profile and recommendations.
-      </p>
-
-      <div className="mt-4 flex flex-wrap gap-3">
         <Link
-          href={`/recommenders/${user.uid}`}
-          className="rounded border border-gray-300 px-4 py-2 text-sm"
+          href="/login"
+          className="rounded-xl border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
         >
-          View My Profile
-        </Link>
-
-        <Link
-          href="/edit-profile"
-          className="rounded bg-black px-4 py-2 text-sm text-white"
-        >
-          Edit Profile
-        </Link>
-
-        <Link
-          href={`/add?recommenderId=${user.uid}`}
-          className="rounded border border-gray-300 px-4 py-2 text-sm"
-        >
-          Add Recommendation
+          Log in
         </Link>
       </div>
-    </section>
+    );
+  }
+
+  // ── Logged in, no profile yet ──
+  if (!hasProfile) {
+    return (
+      <div className="flex flex-wrap gap-3">
+        <Link
+          href="/create-profile"
+          className="rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:opacity-80"
+        >
+          Complete your profile
+        </Link>
+      </div>
+    );
+  }
+
+  // ── Logged in with profile ──
+  return (
+    <div className="flex flex-wrap gap-3">
+      <Link
+        href={`/add?recommenderId=${user.uid}`}
+        className="rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:opacity-80"
+      >
+        Add a recommendation
+      </Link>
+      <Link
+        href={`/recommenders/${user.uid}`}
+        className="rounded-xl border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+      >
+        View my profile
+      </Link>
+      <Link
+        href="/edit-profile"
+        className="rounded-xl border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+      >
+        Edit profile
+      </Link>
+    </div>
   );
 }
