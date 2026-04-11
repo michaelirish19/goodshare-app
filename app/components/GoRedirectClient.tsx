@@ -6,6 +6,7 @@ type Props = {
   recommenderId: string;
   recommendationId: string;
   recommenderName: string;
+  recommenderRole?: string;
   recommendationTitle: string;
   category?: string;
 };
@@ -14,12 +15,19 @@ export default function GoRedirectClient({
   recommenderId,
   recommendationId,
   recommenderName,
+  recommenderRole,
   recommendationTitle,
   category,
 }: Props) {
   const [countdown, setCountdown] = useState(6);
-
   const targetHref = `/out/${recommenderId}/${recommendationId}`;
+
+  const initials = recommenderName
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   useEffect(() => {
     const redirectTimer = window.setTimeout(() => {
@@ -39,75 +47,103 @@ export default function GoRedirectClient({
   return (
     <main className="min-h-screen bg-white px-6 py-10 text-black">
       <div className="mx-auto max-w-2xl">
+
+        {/* Back link */}
+        <a
+          href={`/recommenders/${recommenderId}`}
+          className="mb-8 inline-block text-sm text-gray-500 transition hover:text-black"
+        >
+          ← Back to {recommenderName}&apos;s picks
+        </a>
+
         <section className="rounded-2xl border border-gray-200 p-6 shadow-sm">
-          <p className="text-sm font-medium text-gray-500">
-            Opening recommendation from GoodShare
+
+          {/* Heading */}
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+            Heading to your pick
           </p>
 
-          <h1 className="mt-2 text-3xl font-bold tracking-tight">
+          <h1 className="mt-2 text-2xl font-bold leading-tight tracking-tight">
             {recommendationTitle}
           </h1>
 
-          <p className="mt-3 text-sm text-gray-700">
-            Recommended by{" "}
-            <a
-              href={`/recommenders/${recommenderId}`}
-              className="underline underline-offset-2 hover:text-black"
-            >
-              {recommenderName}
-            </a>
-          </p>
+          {/* Sharer identity */}
+          <div className="mt-4 flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-sm font-bold text-gray-600">
+              {initials}
+            </div>
+            <div>
+              <p className="text-sm font-medium">{recommenderName}</p>
+              {recommenderRole && (
+                <p className="text-xs text-gray-500">{recommenderRole}</p>
+              )}
+            </div>
+          </div>
 
-          {category ? (
+          {/* Category pill */}
+          {category && (
             <div className="mt-4">
-              <span className="inline-flex rounded-full border border-gray-300 px-3 py-1 text-sm text-gray-700">
+              <span className="inline-flex rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-gray-600">
                 {category}
               </span>
             </div>
-          ) : null}
+          )}
 
+          {/* Countdown — drains down */}
           <div className="mt-6">
             <p className="text-sm text-gray-600">
               {countdown > 0
-                ? `Redirecting to the product in ${countdown} second${
-                    countdown === 1 ? "" : "s"
-                  }...`
+                ? `Redirecting in ${countdown} second${countdown === 1 ? "" : "s"}...`
                 : "Redirecting now..."}
             </p>
-
             <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-100">
               <div
                 className="h-full rounded-full bg-black transition-all duration-1000"
-                style={{ width: `${((6 - countdown) / 6) * 100}%` }}
+                style={{ width: `${(countdown / 6) * 100}%` }}
               />
             </div>
           </div>
 
-          <p className="mt-6 text-sm text-gray-700">
-            Want to keep this recommendation?
-          </p>
-
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-            <a
-              href="/signup"
-              className="flex-1 rounded-lg bg-black px-5 py-3 text-center text-base font-semibold text-white transition hover:opacity-90"
-            >
-              Save this + Join GoodShare
-            </a>
-
+          {/* Skip button */}
+          <div className="mt-4">
             <a
               href={targetHref}
-              className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+              className="text-sm font-medium text-gray-500 underline underline-offset-4 transition hover:text-black"
             >
-              View Product Now
+              Go now →
             </a>
           </div>
 
-          <p className="mt-6 text-xs leading-5 text-gray-500">
-            GoodShare helps people discover products through recommendations
-            from real users.
-          </p>
+          {/* Rating CTA */}
+          <div className="mt-8 border-t border-gray-100 pt-6">
+            <p className="text-sm font-medium text-gray-800">
+              Bought it? Come back and rate {recommenderName}.
+            </p>
+            <p className="mt-1 text-xs leading-5 text-gray-500">
+              Your rating helps others trust the right people — and rewards sharers who give great picks.
+            </p>
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+              <a
+                href="/signup"
+                className="flex-1 rounded-xl bg-black px-5 py-3 text-center text-sm font-semibold text-white transition hover:opacity-90"
+              >
+                Create a free account to rate
+              </a>
+              <a
+                href="/login"
+                className="flex-1 rounded-xl border border-gray-300 px-5 py-3 text-center text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+              >
+                Log in
+              </a>
+            </div>
+          </div>
+
         </section>
+
+        <p className="mt-6 text-center text-xs text-gray-400">
+          GoodShare — recommendations from real people.
+        </p>
+
       </div>
     </main>
   );

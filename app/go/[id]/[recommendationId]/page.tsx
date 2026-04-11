@@ -43,9 +43,9 @@ export default async function GoPage({ params }: PageProps) {
     return (
       <main className="min-h-screen bg-white px-6 py-10 text-black">
         <div className="mx-auto max-w-2xl">
-          <h1 className="text-2xl font-bold">Recommendation not found</h1>
+          <h1 className="text-2xl font-bold">Pick not found</h1>
           <p className="mt-2 text-sm text-gray-600">
-            This recommendation may have been removed or the link may be invalid.
+            This pick may have been removed or the link may be invalid.
           </p>
           <a
             href="/"
@@ -66,6 +66,7 @@ export default async function GoPage({ params }: PageProps) {
       recommenderId={id}
       recommendationId={recommendationId}
       recommenderName={recommender.name}
+      recommenderRole={recommender.role}
       recommendationTitle={recommendation.title}
       category={recommendation.category}
     />
