@@ -115,9 +115,7 @@ export default function RecommendationFilter({
                         </a>
                       </h4>
                       <a
-                        href={`/out/${recommenderId}/${item.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href={`/go/${recommenderId}/${item.id}`}
                         className="shrink-0 rounded-xl bg-black px-4 py-2 text-xs font-semibold text-white transition hover:opacity-80"
                       >
                         View →
