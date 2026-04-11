@@ -32,8 +32,7 @@ export default function Home() {
 
           <p className="mb-8 max-w-xl text-lg leading-relaxed text-gray-600">
             Discover tools, products, and resources recommended by people who
-            actually use them — and earn real money when your picks lead to a
-            purchase.
+            actually use them.
           </p>
 
           {/* Stats row */}

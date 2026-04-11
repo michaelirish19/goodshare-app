@@ -48,7 +48,10 @@ export default function RecommendationFilter({
     .sort(([a], [b]) => a.localeCompare(b))
     .map(
       ([category, items]) =>
-        [category, [...items].sort((a, b) => a.title.localeCompare(b.title))] as const
+        [
+          category,
+          [...items].sort((a, b) => a.title.localeCompare(b.title)),
+        ] as const
     );
 
   return (
@@ -58,7 +61,6 @@ export default function RecommendationFilter({
         <span className="text-sm text-gray-400">{recommendations.length} total</span>
       </div>
 
-      {/* Category filter pills */}
       {categories.length > 0 && (
         <div className="mb-6 flex flex-wrap gap-2">
           <button
@@ -134,6 +136,12 @@ export default function RecommendationFilter({
                         className="rounded-xl border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50"
                       >
                         Details
+                      </a>
+                      <a
+                        href={`/rate/${recommenderId}/${item.id}`}
+                        className="rounded-xl border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50"
+                      >
+                        Rate this pick
                       </a>
                       <RecommendationCardQR
                         url={`https://goodshare-app.vercel.app/go/${recommenderId}/${item.id}`}

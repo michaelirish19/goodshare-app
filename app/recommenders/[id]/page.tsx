@@ -37,7 +37,7 @@ export default async function RecommenderPage({ params }: PageProps) {
       <main className="min-h-screen bg-white px-6 py-10 text-black">
         <div className="mx-auto max-w-3xl">
           <a href="/" className="mb-6 inline-block text-sm text-gray-500 hover:text-black">
-            ← Back to GoodShare
+            Back to GoodShare
           </a>
           <h1 className="text-2xl font-bold">Sharer not found</h1>
         </div>
@@ -75,11 +75,12 @@ export default async function RecommenderPage({ params }: PageProps) {
       <div className="mx-auto max-w-3xl">
 
         <a href="/" className="mb-8 inline-block text-sm text-gray-500 transition hover:text-black">
-          ← Back to GoodShare
+          Back to GoodShare
         </a>
 
         <section className="mb-6 rounded-2xl border border-gray-200 p-6 shadow-sm">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gray-100 text-lg font-bold text-gray-600">
                 {initials}
@@ -100,6 +101,7 @@ export default async function RecommenderPage({ params }: PageProps) {
                 </div>
               </div>
             </div>
+
             <div className="flex gap-6 sm:flex-col sm:items-end sm:gap-2">
               <div className="text-center sm:text-right">
                 <p className="text-2xl font-bold">{recommendations.length}</p>

@@ -48,7 +48,6 @@ export default function GoRedirectClient({
     <main className="min-h-screen bg-white px-6 py-10 text-black">
       <div className="mx-auto max-w-2xl">
 
-        {/* Back link */}
         <a
           href={`/recommenders/${recommenderId}`}
           className="mb-8 inline-block text-sm text-gray-500 transition hover:text-black"
@@ -58,7 +57,6 @@ export default function GoRedirectClient({
 
         <section className="rounded-2xl border border-gray-200 p-6 shadow-sm">
 
-          {/* Heading */}
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
             Heading to your pick
           </p>
@@ -67,7 +65,6 @@ export default function GoRedirectClient({
             {recommendationTitle}
           </h1>
 
-          {/* Sharer identity */}
           <div className="mt-4 flex items-center gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-sm font-bold text-gray-600">
               {initials}
@@ -80,7 +77,6 @@ export default function GoRedirectClient({
             </div>
           </div>
 
-          {/* Category pill */}
           {category && (
             <div className="mt-4">
               <span className="inline-flex rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-gray-600">
@@ -89,7 +85,6 @@ export default function GoRedirectClient({
             </div>
           )}
 
-          {/* Countdown — drains down */}
           <div className="mt-6">
             <p className="text-sm text-gray-600">
               {countdown > 0
@@ -104,7 +99,6 @@ export default function GoRedirectClient({
             </div>
           </div>
 
-          {/* Skip button */}
           <div className="mt-4">
             <a
               href={targetHref}
@@ -114,7 +108,6 @@ export default function GoRedirectClient({
             </a>
           </div>
 
-          {/* Rating CTA */}
           <div className="mt-8 border-t border-gray-100 pt-6">
             <p className="text-sm font-medium text-gray-800">
               Bought it? Come back and rate {recommenderName}.
@@ -134,6 +127,14 @@ export default function GoRedirectClient({
                 className="flex-1 rounded-xl border border-gray-300 px-5 py-3 text-center text-sm font-medium text-gray-700 transition hover:bg-gray-50"
               >
                 Log in
+              </a>
+            </div>
+            <div className="mt-3">
+              <a
+                href={`/rate/${recommenderId}/${recommendationId}`}
+                className="block w-full rounded-xl border border-gray-200 px-5 py-3 text-center text-sm font-medium text-gray-600 transition hover:bg-gray-50"
+              >
+                Already bought it? Rate this pick →
               </a>
             </div>
           </div>
