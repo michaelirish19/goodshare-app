@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";;
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 
@@ -310,6 +310,22 @@ export default function AddRecommendationPage() {
         createdAt: serverTimestamp(),
         outboundClicks: 0,
       });
+
+      // Keep categories in sync on the recommender document
+const recommenderRef = doc(db, "recommenders", userId);
+const recommenderSnap = await getDoc(recommenderRef);
+if (recommenderSnap.exists()) {
+  const existing = recommenderSnap.data();
+  const currentCategories = existing.categories
+    ? existing.categories.split("•").map((c: string) => c.trim()).filter(Boolean)
+    : [];
+  if (category && !currentCategories.includes(category)) {
+    const updated = [...currentCategories, category].sort((a, b) => a.localeCompare(b));
+    await updateDoc(recommenderRef, {
+      categories: updated.join(" • "),
+    });
+  }
+}
 
       setSuccessMessage("Saved to your profile.");
 
