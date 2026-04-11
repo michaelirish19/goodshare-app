@@ -39,7 +39,7 @@ export default async function RecommenderPage({ params }: PageProps) {
           <a href="/" className="mb-6 inline-block text-sm text-gray-500 hover:text-black">
             ← Back to GoodShare
           </a>
-          <h1 className="text-2xl font-bold">Recommender not found</h1>
+          <h1 className="text-2xl font-bold">Sharer not found</h1>
         </div>
       </main>
     );
@@ -103,7 +103,7 @@ export default async function RecommenderPage({ params }: PageProps) {
             <div className="flex gap-6 sm:flex-col sm:items-end sm:gap-2">
               <div className="text-center sm:text-right">
                 <p className="text-2xl font-bold">{recommendations.length}</p>
-                <p className="text-xs text-gray-500">Recommendations</p>
+                <p className="text-xs text-gray-500">Picks</p>
               </div>
             </div>
           </div>

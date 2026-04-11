@@ -68,7 +68,7 @@ export default function HomepageActions() {
           href="/create-profile"
           className="rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:opacity-80"
         >
-          Complete your profile
+          Complete your sharer profile
         </Link>
       </div>
     );
@@ -81,7 +81,7 @@ export default function HomepageActions() {
         href={`/add?recommenderId=${user.uid}`}
         className="rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:opacity-80"
       >
-        Add a recommendation
+        Add a Pick
       </Link>
       <Link
         href={`/recommenders/${user.uid}`}

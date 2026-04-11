@@ -54,7 +54,7 @@ export default function RecommendationFilter({
   return (
     <section className="mt-8">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-bold">Recommendations</h2>
+        <h2 className="text-xl font-bold">Picks</h2>
         <span className="text-sm text-gray-400">{recommendations.length} total</span>
       </div>
 
@@ -91,7 +91,6 @@ export default function RecommendationFilter({
         <div className="space-y-8">
           {sortedEntries.map(([category, items]) => (
             <div key={category}>
-              {/* Category header */}
               <div className="mb-3 flex items-center gap-3">
                 <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400">
                   {category}
@@ -106,7 +105,6 @@ export default function RecommendationFilter({
                     key={item.id}
                     className="rounded-2xl border border-gray-200 p-5 transition hover:border-gray-300 hover:shadow-sm"
                   >
-                    {/* Card header */}
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <h4 className="text-base font-semibold leading-snug">
                         <a
@@ -116,8 +114,6 @@ export default function RecommendationFilter({
                           {item.title}
                         </a>
                       </h4>
-
-                      {/* Primary action */}
                       <a
                         href={`/out/${recommenderId}/${item.id}`}
                         target="_blank"
@@ -128,14 +124,12 @@ export default function RecommendationFilter({
                       </a>
                     </div>
 
-                    {/* Description */}
                     {item.description && (
                       <p className="mb-4 text-sm leading-6 text-gray-600">
                         {item.description}
                       </p>
                     )}
 
-                    {/* Secondary actions */}
                     <div className="flex flex-wrap items-center gap-2">
                       <a
                         href={`/recommenders/${recommenderId}/recommendations/${item.id}`}
@@ -143,11 +137,9 @@ export default function RecommendationFilter({
                       >
                         Details
                       </a>
-
                       <RecommendationCardQR
                         url={`https://goodshare-app.vercel.app/go/${recommenderId}/${item.id}`}
                       />
-
                       <OwnerControls
                         type="recommendation"
                         profileUserId={profileUserId}
@@ -163,9 +155,7 @@ export default function RecommendationFilter({
         </div>
       ) : (
         <div className="rounded-2xl border border-dashed border-gray-200 px-6 py-12 text-center">
-          <p className="text-sm font-medium text-gray-400">
-            No recommendations in this category.
-          </p>
+          <p className="text-sm font-medium text-gray-400">No picks in this category.</p>
         </div>
       )}
     </section>

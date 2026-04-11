@@ -23,7 +23,7 @@ export default function Home() {
             Trusted recommendations
           </p>
 
-          <h1 className="mb-4 text-5xl font-bold leading-tight tracking-tight text-black sm:text-6xl">
+          <h1 className="mb-4 text-4xl font-bold leading-tight tracking-tight text-black sm:text-5xl md:text-6xl">
             Recommendations<br />from real&nbsp;people.
           </h1>
 
@@ -37,11 +37,11 @@ export default function Home() {
           <div className="mb-8 flex gap-8 border-y border-gray-100 py-5">
             <div>
               <p className="text-2xl font-bold">47</p>
-              <p className="text-xs text-gray-500">Recommenders</p>
+              <p className="text-xs text-gray-500">Sharers</p>
             </div>
             <div>
               <p className="text-2xl font-bold">312</p>
-              <p className="text-xs text-gray-500">Recommendations</p>
+              <p className="text-xs text-gray-500">Picks</p>
             </div>
             <div>
               <p className="text-2xl font-bold">1.2k</p>
