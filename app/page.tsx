@@ -1,7 +1,7 @@
 import AuthStatus from "./components/AuthStatus";
 import HomepageActions from "./components/HomepageActions";
 import JoinGoodShareButton from "./components/JoinGoodShareButton";
-import HomeDirectory from "./components/HomeDirectory";
+import TopSharers from "./components/TopSharers";
 
 export default function Home() {
   return (
@@ -12,6 +12,9 @@ export default function Home() {
         <header className="mb-12 flex items-center justify-between">
           <span className="text-xl font-bold tracking-tight">GoodShare</span>
           <div className="flex flex-wrap items-center gap-3">
+            <a href="/discover" className="text-sm font-medium text-gray-600 transition hover:text-black">
+              Discover
+            </a>
             <JoinGoodShareButton />
             <AuthStatus />
           </div>
@@ -83,8 +86,8 @@ export default function Home() {
           <HomepageActions />
         </section>
 
-        {/* ── Directory ── */}
-        <HomeDirectory />
+        {/* ── Top Sharers ── */}
+        <TopSharers />
 
       </div>
     </main>

@@ -27,17 +27,11 @@ function HomeDirectoryContent() {
     const unsubscribe = onSnapshot(collection(db, "recommenders"), (snapshot) => {
       const nextRecommenders: Recommender[] = snapshot.docs.map((doc) => {
         const data = doc.data() as Omit<Recommender, "id">;
-
-        return {
-          id: doc.id,
-          ...data,
-        };
+        return { id: doc.id, ...data };
       });
-
       setRecommenders(nextRecommenders);
       setLoading(false);
     });
-
     return () => unsubscribe();
   }, []);
 
@@ -58,13 +52,10 @@ function HomeDirectoryContent() {
     ).sort((a, b) => a.localeCompare(b));
   }, [recommenders]);
 
-  const visibleCategories = showAllCategories
-    ? categories
-    : categories.slice(0, 10);
+  const visibleCategories = showAllCategories ? categories : categories.slice(0, 10);
 
   const filteredRecommenders = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
-
     return recommenders.filter((recommender) => {
       const parsedCategories = recommender.categories
         .split("•")
@@ -72,8 +63,7 @@ function HomeDirectoryContent() {
         .filter(Boolean);
 
       const matchesCategory =
-        selectedCategory === "All" ||
-        parsedCategories.includes(selectedCategory);
+        selectedCategory === "All" || parsedCategories.includes(selectedCategory);
 
       const matchesSearch =
         normalizedSearch === "" ||
@@ -100,10 +90,7 @@ function HomeDirectoryContent() {
 
         <div className="mt-4 flex flex-wrap gap-3">
           <button
-            onClick={() => {
-              setSelectedCategory("All");
-              setSearchTerm("");
-            }}
+            onClick={() => { setSelectedCategory("All"); setSearchTerm(""); }}
             className={`rounded-full px-4 py-2 text-sm ${
               selectedCategory === "All"
                 ? "bg-black text-white"
@@ -116,10 +103,7 @@ function HomeDirectoryContent() {
           {visibleCategories.map((category) => (
             <button
               key={category}
-              onClick={() => {
-                setSelectedCategory(category);
-                setSearchTerm("");
-              }}
+              onClick={() => { setSelectedCategory(category); setSearchTerm(""); }}
               className={`rounded-full px-4 py-2 text-sm ${
                 selectedCategory === category
                   ? "bg-black text-white"
@@ -145,7 +129,7 @@ function HomeDirectoryContent() {
       <section className="mb-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-xl font-semibold">Recommenders</h2>
+            <h2 className="text-xl font-semibold">All Sharers</h2>
             <p className="mt-1 text-sm text-gray-500">
               {selectedCategory === "All"
                 ? `${filteredRecommenders.length} shown`
@@ -161,10 +145,7 @@ function HomeDirectoryContent() {
               onChange={(e) => {
                 const value = e.target.value;
                 setSearchTerm(value);
-
-                if (value.trim() !== "") {
-                  setSelectedCategory("All");
-                }
+                if (value.trim() !== "") setSelectedCategory("All");
               }}
               placeholder="Search name, role, category..."
               className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
@@ -185,16 +166,11 @@ function HomeDirectoryContent() {
                   key={recommender.id}
                   className="rounded-xl border border-gray-200 p-4 shadow-sm"
                 >
-                  <h3 className="text-lg font-semibold">
-                    {recommender.name}
-                  </h3>
-
-                  <p className="text-sm text-gray-600">
-                    {recommender.role}
-                  </p>
+                  <h3 className="text-lg font-semibold">{recommender.name}</h3>
+                  <p className="text-sm text-gray-600">{recommender.role}</p>
 
                   {recommender.description && (
-                    <p className="mt-2 text-sm text-gray-600 line-clamp-3">
+                    <p className="mt-2 line-clamp-3 text-sm text-gray-600">
                       {recommender.description}
                     </p>
                   )}
@@ -204,10 +180,7 @@ function HomeDirectoryContent() {
                       <button
                         key={category}
                         type="button"
-                        onClick={() => {
-                          setSelectedCategory(category);
-                          setSearchTerm("");
-                        }}
+                        onClick={() => { setSelectedCategory(category); setSearchTerm(""); }}
                         className={`rounded-full px-3 py-1 text-sm ${
                           selectedCategory === category
                             ? "bg-black text-white"
@@ -223,16 +196,14 @@ function HomeDirectoryContent() {
                     href={`/recommenders/${recommender.id}`}
                     className="mt-4 inline-block rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
                   >
-                    View Recommendations
+                    View Picks
                   </a>
                 </div>
               );
             })}
           </div>
         ) : (
-          <p className="mt-4 text-sm text-gray-500">
-            No recommenders matched your filters.
-          </p>
+          <p className="mt-4 text-sm text-gray-500">No sharers matched your filters.</p>
         )}
       </section>
     </>
@@ -241,9 +212,7 @@ function HomeDirectoryContent() {
 
 export default function HomeDirectory() {
   return (
-    <Suspense
-      fallback={<div className="mt-6 text-sm text-gray-500">Loading...</div>}
-    >
+    <Suspense fallback={<div className="mt-6 text-sm text-gray-500">Loading...</div>}>
       <HomeDirectoryContent />
     </Suspense>
   );
