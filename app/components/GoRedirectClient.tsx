@@ -29,6 +29,11 @@ export default function GoRedirectClient({
     .join("")
     .toUpperCase();
 
+  // Referral-aware signup and login URLs
+  const signupHref = `/signup?ref=${recommenderId}&pick=${recommendationId}`;
+  const loginHref = `/login?ref=${recommenderId}&pick=${recommendationId}`;
+  const rateHref = `/rate/${recommenderId}/${recommendationId}`;
+
   useEffect(() => {
     const redirectTimer = window.setTimeout(() => {
       window.location.href = targetHref;
@@ -117,13 +122,13 @@ export default function GoRedirectClient({
             </p>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
               <a
-                href="/signup"
+                href={signupHref}
                 className="flex-1 rounded-xl bg-black px-5 py-3 text-center text-sm font-semibold text-white transition hover:opacity-90"
               >
                 Create a free account to rate
               </a>
               <a
-                href="/login"
+                href={loginHref}
                 className="flex-1 rounded-xl border border-gray-300 px-5 py-3 text-center text-sm font-medium text-gray-700 transition hover:bg-gray-50"
               >
                 Log in
@@ -131,7 +136,7 @@ export default function GoRedirectClient({
             </div>
             <div className="mt-3">
               <a
-                href={`/rate/${recommenderId}/${recommendationId}`}
+                href={rateHref}
                 className="block w-full rounded-xl border border-gray-200 px-5 py-3 text-center text-sm font-medium text-gray-600 transition hover:bg-gray-50"
               >
                 Already bought it? Rate this pick →
