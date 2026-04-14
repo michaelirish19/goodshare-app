@@ -3,6 +3,7 @@ import OwnerControls from "../../components/OwnerControls";
 import RecommendationFilter from "../../components/RecommendationFilter";
 import QRCodeCard from "../../components/QRCodeCard";
 import TrustMeter from "../../components/TrustMeter";
+import BadgeDisplay from "../../components/BadgeDisplay";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 
 type Recommender = {
@@ -11,6 +12,13 @@ type Recommender = {
   categories: string;
   userId?: string;
   description?: string;
+  createdAt?: { seconds: number };
+  lastActiveAt?: { seconds: number };
+  totalRatings?: number;
+  totalRatingScore?: number;
+  totalOutboundClickCount?: number;
+  referralCount?: number;
+  isBetaUser?: boolean;
 };
 
 type Recommendation = {
@@ -106,6 +114,24 @@ export default async function RecommenderPage({ params }: PageProps) {
               <p className="text-sm leading-6 text-gray-600">{recommender.description}</p>
             </div>
           )}
+
+          {/* Badges */}
+          <BadgeDisplay
+            recommenderId={id}
+            recommenderData={{
+              name: recommender.name,
+              role: recommender.role,
+              description: recommender.description,
+              createdAt: recommender.createdAt,
+              lastActiveAt: recommender.lastActiveAt,
+              totalRatings: recommender.totalRatings,
+              totalRatingScore: recommender.totalRatingScore,
+              totalOutboundClickCount: recommender.totalOutboundClickCount,
+              referralCount: recommender.referralCount,
+              isBetaUser: recommender.isBetaUser,
+            }}
+            recommendationCount={recommendations.length}
+          />
 
           <div className="mt-5">
             <OwnerControls
