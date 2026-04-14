@@ -2,6 +2,7 @@ import { db } from "../../firebase";
 import OwnerControls from "../../components/OwnerControls";
 import RecommendationFilter from "../../components/RecommendationFilter";
 import QRCodeCard from "../../components/QRCodeCard";
+import TrustMeter from "../../components/TrustMeter";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 
 type Recommender = {
@@ -88,17 +89,7 @@ export default async function RecommenderPage({ params }: PageProps) {
               <div>
                 <h1 className="text-2xl font-bold leading-tight">{recommender.name}</h1>
                 <p className="mt-0.5 text-sm font-medium text-gray-500">{recommender.role}</p>
-                <div className="mt-3">
-                  <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-gray-400">
-                    Trust rating
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <div className="h-2.5 w-36 overflow-hidden rounded-full bg-gray-100">
-                      <div className="h-full w-0 rounded-full bg-gray-300" />
-                    </div>
-                    <span className="text-xs text-gray-400">No ratings yet</span>
-                  </div>
-                </div>
+                <TrustMeter recommenderId={id} />
               </div>
             </div>
 
