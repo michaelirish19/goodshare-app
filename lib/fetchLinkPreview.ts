@@ -28,6 +28,27 @@ function pickFirst(...values: Array<string | undefined | null>) {
   return "";
 }
 
+// Strip site name suffixes like "| Amazon.com" or "— Home Depot" from titles
+function stripSiteName(title: string): string {
+  return title
+    .replace(/\s*[\|—\-–]\s*.{0,40}?(\.com|\.org|\.net|\.io|\.co).*$/i, "")
+    .replace(/\s*[\|—\-–]\s*[A-Z][a-zA-Z\s]{2,30}$/g, "")
+    .trim();
+}
+
+// Truncate to a max number of words
+function truncateTitle(title: string, maxWords = 10): string {
+  const words = title.split(" ").filter(Boolean);
+  if (words.length <= maxWords) return title;
+  return words.slice(0, maxWords).join(" ") + "…";
+}
+
+// Truncate description to a max number of characters
+function truncateDescription(description: string, maxChars = 200): string {
+  if (description.length <= maxChars) return description;
+  return description.slice(0, maxChars).trimEnd() + "…";
+}
+
 export async function fetchLinkPreview(url: string): Promise<LinkPreview | null> {
   try {
     const response = await fetch(url, {
@@ -57,32 +78,40 @@ export async function fetchLinkPreview(url: string): Promise<LinkPreview | null>
 
     const $ = cheerio.load(html);
 
-    const title = pickFirst(
+    // Title — strip site name and truncate
+    const rawTitle = pickFirst(
       $('meta[property="og:title"]').attr("content"),
       $('meta[name="twitter:title"]').attr("content"),
       $('meta[name="title"]').attr("content"),
       $("title").text(),
       $("h1").first().text()
     );
+    const title = truncateTitle(stripSiteName(rawTitle));
 
-    const description = pickFirst(
+    // Description — try meta tags first, fall back to body text
+    const rawDescription = pickFirst(
       $('meta[property="og:description"]').attr("content"),
       $('meta[name="twitter:description"]').attr("content"),
-      $('meta[name="description"]').attr("content")
+      $('meta[name="description"]').attr("content"),
+      $("article p").first().text(),
+      $("main p").first().text(),
+      $("p").first().text()
     );
+    const description = truncateDescription(rawDescription);
 
+    // Image
     const imageRaw = pickFirst(
       $('meta[property="og:image"]').attr("content"),
       $('meta[name="twitter:image"]').attr("content"),
       $("img").first().attr("src")
     );
+    const image = imageRaw ? toAbsoluteUrl(imageRaw, url) : "";
 
+    // Site name
     const siteName = pickFirst(
       $('meta[property="og:site_name"]').attr("content"),
       new URL(url).hostname.replace(/^www\./, "")
     );
-
-    const image = imageRaw ? toAbsoluteUrl(imageRaw, url) : "";
 
     const preview = {
       url,
