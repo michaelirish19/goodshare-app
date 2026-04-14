@@ -95,14 +95,6 @@ export default async function RecommendationPage({ params }: PageProps) {
 
           <h1 className="mt-2 text-3xl font-bold leading-tight">{recommendation.title}</h1>
 
-          <LinkPreviewCard
-            url={recommendation.url}
-            fallbackTitle={recommendation.title}
-            fallbackDescription={recommendation.description}
-            fallbackImage={recommendation.image}
-            fallbackSiteName={recommendation.siteName}
-          />
-
           <div className="mt-4 flex flex-wrap gap-2">
             <span className="rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-gray-600">
               {recommendation.category || "Uncategorized"}
