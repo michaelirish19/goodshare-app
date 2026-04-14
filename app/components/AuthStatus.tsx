@@ -12,7 +12,13 @@ export default function AuthStatus() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+      // Only show as logged in if email is verified
+      // (Google accounts are always verified)
+      if (currentUser && (currentUser.emailVerified || currentUser.providerData.some(p => p.providerId === "google.com"))) {
+        setUser(currentUser);
+      } else {
+        setUser(null);
+      }
     });
 
     return () => unsubscribe();
@@ -33,18 +39,20 @@ export default function AuthStatus() {
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-3">
-      <span className="text-sm text-gray-600">{user.email}</span>
+      <span className="text-sm text-gray-600">
+        {user.displayName || user.email}
+      </span>
 
       <Link
         href={`/recommenders/${user.uid}`}
-        className="rounded border border-gray-300 px-3 py-1 text-sm"
+        className="rounded-xl border border-gray-300 px-3 py-1.5 text-sm font-medium transition hover:bg-gray-50"
       >
         My Profile
       </Link>
 
       <button
         onClick={handleLogout}
-        className="rounded border border-gray-300 px-3 py-1 text-sm"
+        className="rounded-xl border border-gray-300 px-3 py-1.5 text-sm font-medium transition hover:bg-gray-50"
       >
         Log Out
       </button>
