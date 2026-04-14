@@ -495,15 +495,18 @@ if (recommenderSnap.exists()) {
 
               <div>
                 <label
-                  htmlFor="notes"
-                  className="mb-2 block text-sm font-medium text-neutral-800"
-                >
-                  Notes
-                </label>
-                <textarea
-                  id="notes"
-                  rows={4}
-                  placeholder="Why do you recommend this? Optional."
+  htmlFor="notes"
+  className="mb-2 block text-sm font-medium text-neutral-800"
+>
+  Notes
+</label>
+<p className="mb-2 text-xs text-neutral-500">
+  This will appear on your pick as "Why you recommend this." Tell people what makes it worth it in your own words.
+</p>
+<textarea
+  id="notes"
+  rows={4}
+  placeholder="e.g. I've used this for 2 years and it's the best I've found. Changed how I work completely."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-base outline-none transition focus:border-neutral-900"
