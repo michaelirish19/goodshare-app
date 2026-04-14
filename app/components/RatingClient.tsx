@@ -36,7 +36,6 @@ function getBarColor(score: number): string {
   return "#CFB53B";
 }
 
-// Friction: returns a multiplier that slows movement near extremes
 function getFrictionMultiplier(score: number): number {
   const distanceFromEdge = Math.min(score, 100 - score);
   if (distanceFromEdge > 30) return 1;
@@ -62,6 +61,7 @@ export default function RatingClient({
 
   const [score, setScore] = useState(50);
   const [note, setNote] = useState("");
+  const [confirmedPurchase, setConfirmedPurchase] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
@@ -71,11 +71,26 @@ export default function RatingClient({
   const lastX = useRef(0);
   const fractionalScore = useRef(50);
 
-  // Auth check
+  // Auth check + lastActiveAt update
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
+
+      // Update lastActiveAt on the recommender document if they have a profile
+      if (currentUser) {
+        try {
+          const profileRef = doc(db, "recommenders", currentUser.uid);
+          const profileSnap = await getDoc(profileRef);
+          if (profileSnap.exists()) {
+            await updateDoc(profileRef, {
+              lastActiveAt: serverTimestamp(),
+            });
+          }
+        } catch (err) {
+          console.error("Failed to update lastActiveAt:", err);
+        }
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -90,7 +105,6 @@ export default function RatingClient({
     async function check() {
       setCheckingEligibility(true);
       try {
-        // Check if already rated
         const ratingId = `${user!.uid}_${recommendationId}`;
         const ratingRef = doc(db, "ratings", ratingId);
         const ratingSnap = await getDoc(ratingRef);
@@ -100,7 +114,6 @@ export default function RatingClient({
           return;
         }
 
-        // Check for outbound click
         const { collection, query, where, getDocs } = await import("firebase/firestore");
         const clicksRef = collection(db, "outboundClicks");
         const q = query(
@@ -112,7 +125,7 @@ export default function RatingClient({
         setHasClick(!clickSnap.empty);
       } catch (err) {
         console.error("Eligibility check failed:", err);
-        setHasClick(true); // fail open so users aren't blocked by errors
+        setHasClick(true);
       } finally {
         setCheckingEligibility(false);
       }
@@ -182,13 +195,17 @@ export default function RatingClient({
       return;
     }
 
+    if (!confirmedPurchase) {
+      setError("Please confirm you purchased this product before submitting.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       const ratingId = `${user.uid}_${recommendationId}`;
       const ratingRef = doc(db, "ratings", ratingId);
 
-      // Save rating
       await setDoc(ratingRef, {
         recommenderId,
         recommendationId,
@@ -196,11 +213,11 @@ export default function RatingClient({
         reviewerName: user.displayName || user.email || "Anonymous",
         score,
         note: note.trim(),
-        verified: hasClick,
+        verified: confirmedPurchase,
+        hasClick,
         createdAt: serverTimestamp(),
       });
 
-      // Update pick score fields
       const recommendationRef = doc(
         db,
         "recommenders",
@@ -213,7 +230,6 @@ export default function RatingClient({
         pickRatings: increment(1),
       });
 
-      // Update sharer trust score fields
       const recommenderRef = doc(db, "recommenders", recommenderId);
       await updateDoc(recommenderRef, {
         totalRatingScore: increment(score),
@@ -312,9 +328,17 @@ export default function RatingClient({
             <p className="mt-2 text-sm text-gray-600">
               Thanks for rating {recommenderName}&apos;s pick. Your rating helps build trust in GoodShare.
             </p>
-            <div className="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold" style={{ backgroundColor: ratingInfo.color, color: ratingInfo.textColor }}>
+            <div
+              className="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
+              style={{ backgroundColor: ratingInfo.color, color: ratingInfo.textColor }}
+            >
               {score}/100 — {ratingInfo.label}
             </div>
+            {confirmedPurchase && (
+              <p className="mt-3 text-xs text-green-600 font-medium">
+                ✓ Verified purchase
+              </p>
+            )}
             <div className="mt-6 flex justify-center gap-3">
               <a href={`/recommenders/${recommenderId}`} className="rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white hover:opacity-80">
                 Back to {recommenderName}&apos;s picks
@@ -337,13 +361,11 @@ export default function RatingClient({
 
         <div className="rounded-2xl border border-gray-200 p-6 shadow-sm">
 
-          {/* Header */}
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
             Rate this pick
           </p>
           <h1 className="mt-2 text-2xl font-bold leading-tight">{pickTitle}</h1>
 
-          {/* Sharer */}
           <div className="mt-4 flex items-center gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-sm font-bold text-gray-600">
               {initials}
@@ -364,8 +386,27 @@ export default function RatingClient({
             </div>
           )}
 
-          {/* Divider */}
           <div className="my-6 border-t border-gray-100" />
+
+          {/* Purchase confirmation checkbox */}
+          <div className="mb-6 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={confirmedPurchase}
+                onChange={(e) => setConfirmedPurchase(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-black"
+              />
+              <div>
+                <p className="text-sm font-medium text-gray-800">
+                  I confirm I purchased this product based on this recommendation
+                </p>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Your rating will be marked as a verified purchase. This keeps GoodShare trustworthy for everyone.
+                </p>
+              </div>
+            </label>
+          </div>
 
           {/* Score display */}
           <div className="mb-6 flex items-center justify-between">
@@ -392,27 +433,18 @@ export default function RatingClient({
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            {/* Filled bar */}
             <div
               className="absolute left-0 top-0 h-full rounded-full transition-colors duration-300"
-              style={{
-                width: `${score}%`,
-                backgroundColor: barColor,
-              }}
+              style={{ width: `${score}%`, backgroundColor: barColor }}
             />
-
-            {/* Thumb */}
             <div
               className="absolute top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-white shadow-md transition-colors duration-300"
-              style={{
-                left: `${score}%`,
-                boxShadow: `0 0 0 3px ${barColor}`,
-              }}
+              style={{ left: `${score}%`, boxShadow: `0 0 0 3px ${barColor}` }}
             />
           </div>
 
           <p className="mt-3 text-center text-xs text-gray-400">
-            Drag to rate — harder to reach the extremes
+            Keep dragging to reach the end. Slider has built-in friction.
           </p>
 
           {/* Note field */}
@@ -432,17 +464,15 @@ export default function RatingClient({
             </p>
           </div>
 
-          {/* Error */}
           {error && (
             <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           )}
 
-          {/* Submit */}
           <button
             onClick={handleSubmit}
-            disabled={isSubmitting || note.trim().length < 20}
+            disabled={isSubmitting || note.trim().length < 20 || !confirmedPurchase}
             className="mt-6 w-full rounded-2xl bg-black px-6 py-4 text-sm font-semibold text-white transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isSubmitting ? "Submitting..." : `Submit rating — ${score}/100`}

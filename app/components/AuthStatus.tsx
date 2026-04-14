@@ -3,19 +3,35 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
+import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 
 export default function AuthStatus() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      // Only show as logged in if email is verified
-      // (Google accounts are always verified)
-      if (currentUser && (currentUser.emailVerified || currentUser.providerData.some(p => p.providerId === "google.com"))) {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (
+        currentUser &&
+        (currentUser.emailVerified ||
+          currentUser.providerData.some((p) => p.providerId === "google.com"))
+      ) {
         setUser(currentUser);
+
+        // Update lastActiveAt whenever a verified user loads the app
+        try {
+          const profileRef = doc(db, "recommenders", currentUser.uid);
+          const profileSnap = await getDoc(profileRef);
+          if (profileSnap.exists()) {
+            await updateDoc(profileRef, {
+              lastActiveAt: serverTimestamp(),
+            });
+          }
+        } catch (err) {
+          console.error("Failed to update lastActiveAt:", err);
+        }
       } else {
         setUser(null);
       }
