@@ -49,10 +49,7 @@ function normalizeUrl(input: string) {
 function fallbackTitleFromUrl(rawUrl: string) {
   try {
     const url = new URL(rawUrl);
-    const path = url.pathname
-      .replace(/\/+/g, " ")
-      .replace(/[-_]/g, " ")
-      .trim();
+    const path = url.pathname.replace(/\/+/g, " ").replace(/[-_]/g, " ").trim();
     const hostname = url.hostname.replace(/^www\./, "");
     if (path && path !== "/") {
       const cleanedPath = path.split(" ").filter(Boolean).slice(0, 8).join(" ");
@@ -108,6 +105,7 @@ export default function AddRecommendationPage() {
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [category, setCategory] = useState("");
+  const [customCategory, setCustomCategory] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFetchingPreview, setIsFetchingPreview] = useState(false);
@@ -115,14 +113,12 @@ export default function AddRecommendationPage() {
   const [saved, setSaved] = useState(false);
 
   const [preview, setPreview] = useState<PreviewData | null>(null);
-  const [showOptionalFields, setShowOptionalFields] = useState(false);
+  const [showTitle, setShowTitle] = useState(false);
 
-  // Talk to text
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
   const recognitionRef = useRef<unknown>(null);
 
-  // Rotating prompt
   const [promptIndex] = useState(() => Math.floor(Math.random() * NOTE_PROMPTS.length));
 
   useEffect(() => {
@@ -154,104 +150,102 @@ export default function AddRecommendationPage() {
     return prettyHostname(normalizedUrl);
   }, [urlLooksValid, normalizedUrl]);
 
+  const finalCategory = customCategory.trim() || category;
+
   function startListening() {
-  type SpeechRecognitionConstructor = new () => {
-    continuous: boolean;
-    interimResults: boolean;
-    lang: string;
-    onresult: ((event: unknown) => void) | null;
-    onend: (() => void) | null;
-    onerror: (() => void) | null;
-    start: () => void;
-    stop: () => void;
-  };
+    type SpeechRecognitionConstructor = new () => {
+      continuous: boolean;
+      interimResults: boolean;
+      lang: string;
+      onresult: ((event: unknown) => void) | null;
+      onend: (() => void) | null;
+      onerror: (() => void) | null;
+      start: () => void;
+      stop: () => void;
+    };
 
-  const SpeechRecognitionAPI = (
-    (window as unknown as Record<string, unknown>)["SpeechRecognition"] ||
-    (window as unknown as Record<string, unknown>)["webkitSpeechRecognition"]
-  ) as SpeechRecognitionConstructor | undefined;
+    const SpeechRecognitionAPI = (
+      (window as unknown as Record<string, unknown>)["SpeechRecognition"] ||
+      (window as unknown as Record<string, unknown>)["webkitSpeechRecognition"]
+    ) as SpeechRecognitionConstructor | undefined;
 
-  if (!SpeechRecognitionAPI) return;
+    if (!SpeechRecognitionAPI) return;
 
-  const recognition = new SpeechRecognitionAPI();
-  recognition.continuous = false;
-  recognition.interimResults = false;
-  recognition.lang = "en-US";
+    const recognition = new SpeechRecognitionAPI();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
 
-  recognition.onresult = (event: unknown) => {
-    const e = event as { results: Array<Array<{ transcript: string }>> };
-const transcript = e.results[0][0].transcript;
-    setNotes((prev) => (prev ? `${prev} ${transcript}` : transcript));
-  };
+    recognition.onresult = (event: unknown) => {
+      const e = event as { results: Array<Array<{ transcript: string }>> };
+      const transcript = e.results[0][0].transcript;
+      setNotes((prev) => (prev ? `${prev} ${transcript}` : transcript));
+    };
 
-  recognition.onend = () => {
-    setIsListening(false);
-  };
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
 
-  recognition.onerror = () => {
-    setIsListening(false);
-  };
-
-  recognitionRef.current = recognition;
-  recognition.start();
-  setIsListening(true);
-}
-
-function stopListening() {
-  const recognition = recognitionRef.current as { stop: () => void } | null;
-  recognition?.stop();
-  setIsListening(false);
-}
-useEffect(() => {
-  setError("");
-  if (!urlLooksValid) {
-    setPreview(null);
-    setCategory("");
-    return;
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
   }
-  setCategory(inferCategory(normalizedUrl));
 
-  async function fetchPreview(targetUrl: string) {
-    if (!isValidUrl(targetUrl)) return;
-    setIsFetchingPreview(true);
-    try {
-      const response = await fetch(
-        `/api/link-preview?url=${encodeURIComponent(targetUrl)}`,
-        { method: "GET", cache: "no-store" }
-      );
-      if (!response.ok) throw new Error("Preview unavailable");
-      const data = await response.json();
-      const nextPreview: PreviewData = {
-        title: data?.title ?? "",
-        description: data?.description ?? "",
-        image: data?.image ?? "",
-        siteName: data?.siteName ?? "",
-      };
-      setPreview(nextPreview);
-      if (!title.trim() && nextPreview.title?.trim()) {
-        setTitle(nextPreview.title.trim());
-      }
-    } catch {
-      setPreview({
-        title: fallbackTitleFromUrl(targetUrl),
-        description: "",
-        image: "",
-        siteName: prettyHostname(targetUrl),
-      });
-      if (!title.trim()) {
-        setTitle(fallbackTitleFromUrl(targetUrl));
-      }
-    } finally {
-      setIsFetchingPreview(false);
+  function stopListening() {
+    const recognition = recognitionRef.current as { stop: () => void } | null;
+    recognition?.stop();
+    setIsListening(false);
+  }
+
+  useEffect(() => {
+    setError("");
+    if (!urlLooksValid) {
+      setPreview(null);
+      setCategory("");
+      return;
     }
-  }
+    setCategory(inferCategory(normalizedUrl));
 
-  const timer = setTimeout(() => {
-    fetchPreview(normalizedUrl);
-  }, 500);
+    async function fetchPreview(targetUrl: string) {
+      if (!isValidUrl(targetUrl)) return;
+      setIsFetchingPreview(true);
+      try {
+        const response = await fetch(
+          `/api/link-preview?url=${encodeURIComponent(targetUrl)}`,
+          { method: "GET", cache: "no-store" }
+        );
+        if (!response.ok) throw new Error("Preview unavailable");
+        const data = await response.json();
+        const nextPreview: PreviewData = {
+          title: data?.title ?? "",
+          description: data?.description ?? "",
+          image: data?.image ?? "",
+          siteName: data?.siteName ?? "",
+        };
+        setPreview(nextPreview);
+        if (!title.trim() && nextPreview.title?.trim()) {
+          setTitle(nextPreview.title.trim());
+        }
+      } catch {
+        setPreview({
+          title: fallbackTitleFromUrl(targetUrl),
+          description: "",
+          image: "",
+          siteName: prettyHostname(targetUrl),
+        });
+        if (!title.trim()) {
+          setTitle(fallbackTitleFromUrl(targetUrl));
+        }
+      } finally {
+        setIsFetchingPreview(false);
+      }
+    }
 
-  return () => clearTimeout(timer);
-}, [normalizedUrl, urlLooksValid]);
+    const timer = setTimeout(() => {
+      fetchPreview(normalizedUrl);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [normalizedUrl, urlLooksValid]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -284,7 +278,7 @@ useEffect(() => {
         url: normalizedUrl,
         title: finalTitle,
         description: notes.trim(),
-        category,
+        category: finalCategory,
         siteName: preview?.siteName || hostname || "",
         image: preview?.image || "",
         createdAt: serverTimestamp(),
@@ -292,7 +286,6 @@ useEffect(() => {
         outboundClickCount: 0,
       });
 
-      // Keep categories in sync
       const recommenderRef = doc(db, "recommenders", userId);
       const recommenderSnap = await getDoc(recommenderRef);
       if (recommenderSnap.exists()) {
@@ -300,8 +293,8 @@ useEffect(() => {
         const currentCategories = existing.categories
           ? existing.categories.split("•").map((c: string) => c.trim()).filter(Boolean)
           : [];
-        if (category && !currentCategories.includes(category)) {
-          const updated = [...currentCategories, category].sort((a, b) => a.localeCompare(b));
+        if (finalCategory && !currentCategories.includes(finalCategory)) {
+          const updated = [...currentCategories, finalCategory].sort((a, b) => a.localeCompare(b));
           await updateDoc(recommenderRef, {
             categories: updated.join(" • "),
           });
@@ -319,7 +312,6 @@ useEffect(() => {
 
   const noteEncouragement = getNoteEncouragement(notes.trim().length);
 
-  // ── Auth loading ──
   if (authLoading) {
     return (
       <main className="mx-auto flex min-h-[70vh] w-full max-w-2xl items-center justify-center px-4 py-10">
@@ -330,7 +322,6 @@ useEffect(() => {
     );
   }
 
-  // ── Saved celebration ──
   if (saved) {
     return (
       <main className="mx-auto flex min-h-[70vh] w-full max-w-2xl items-center justify-center px-4 py-10">
@@ -338,9 +329,7 @@ useEffect(() => {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl">
             🎉
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-neutral-950">
-            Pick saved!
-          </h2>
+          <h2 className="text-2xl font-bold tracking-tight text-neutral-950">Pick saved!</h2>
           <p className="mt-2 text-sm text-neutral-600">
             <strong>{derivedTitle}</strong> has been added to your profile.
           </p>
@@ -351,8 +340,10 @@ useEffect(() => {
                 setUrl("");
                 setTitle("");
                 setNotes("");
+                setCategory("");
+                setCustomCategory("");
                 setPreview(null);
-                setShowOptionalFields(false);
+                setShowTitle(false);
               }}
               className="inline-flex items-center justify-center rounded-2xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:opacity-80"
             >
@@ -382,16 +373,19 @@ useEffect(() => {
             Add a Pick
           </h1>
           <p className="mt-2 max-w-xl text-sm leading-6 text-neutral-600">
-            Paste a link and save it fast. Your words are what make it worth sharing.
+            Paste a link. Then tell people why it&apos;s worth it — that&apos;s what makes your pick worth sharing.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-6">
 
-          {/* URL field */}
+          {/* Step 1 — URL */}
           <div>
+            <label htmlFor="url" className="mb-1 block text-xs font-semibold uppercase tracking-widest text-neutral-400">
+              Step 1
+            </label>
             <label htmlFor="url" className="mb-2 block text-sm font-medium text-neutral-800">
-              Link
+              Paste your link
             </label>
             <input
               id="url"
@@ -405,9 +399,6 @@ useEffect(() => {
               onChange={(e) => setUrl(e.target.value)}
               className="w-full rounded-2xl border border-neutral-300 px-4 py-3 text-base outline-none transition focus:border-neutral-900"
             />
-            <p className="mt-2 text-xs text-neutral-500">
-              This is the only required field.
-            </p>
           </div>
 
           {/* Preview card */}
@@ -415,55 +406,99 @@ useEffect(() => {
             <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
-                    Preview
-                  </p>
+                  <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Preview</p>
                   <h2 className="mt-1 line-clamp-2 text-base font-semibold text-neutral-900">
                     {isFetchingPreview ? "Fetching title…" : derivedTitle || "Could not generate title — add one below"}
                   </h2>
                   <p className="mt-1 break-all text-xs text-neutral-500">{normalizedUrl}</p>
                   {preview?.description && (
-                    <p className="mt-2 line-clamp-3 text-sm text-neutral-600">
-                      {preview.description}
-                    </p>
+                    <p className="mt-2 line-clamp-3 text-sm text-neutral-600">{preview.description}</p>
                   )}
                 </div>
                 {preview?.image && (
-                  <img
-                    src={preview.image}
-                    alt=""
-                    className="h-16 w-16 shrink-0 rounded-xl object-cover"
-                  />
+                  <img src={preview.image} alt="" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
                 )}
               </div>
-
-              <div className="mt-3 flex items-center gap-2 text-xs text-neutral-500">
-                {isFetchingPreview ? (
-                  <span>Fetching preview…</span>
-                ) : (
-                  <span>Looks ready to save.</span>
-                )}
+              <div className="mt-3 text-xs text-neutral-500">
+                {isFetchingPreview ? "Fetching preview…" : "Looks ready to save."}
               </div>
             </div>
           )}
 
-          {/* Category — always visible once URL is valid */}
+          {/* Step 2 — Why (front and center) */}
+          {urlLooksValid && (
+            <div className="rounded-2xl border-2 border-neutral-900 p-5">
+              <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-neutral-400">
+                Step 2
+              </div>
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <div>
+                  <label htmlFor="notes" className="block text-base font-bold text-neutral-900">
+                    Why do you recommend this?
+                  </label>
+                  <p className="mt-1 text-xs text-neutral-500">
+                    This is your voice — the most important part of your pick. Speak or type it.
+                  </p>
+                </div>
+                {speechSupported && (
+                  <button
+                    type="button"
+                    onClick={isListening ? stopListening : startListening}
+                    className={`shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                      isListening
+                        ? "bg-red-100 text-red-700 animate-pulse"
+                        : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+                    }`}
+                  >
+                    <span>{isListening ? "🔴" : "🎤"}</span>
+                    {isListening ? "Listening…" : "Speak it"}
+                  </button>
+                )}
+              </div>
+
+              <textarea
+                id="notes"
+                rows={4}
+                placeholder={NOTE_PROMPTS[promptIndex]}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className={`w-full rounded-2xl border px-4 py-3 text-base outline-none transition focus:border-neutral-900 ${
+                  isListening ? "border-red-300 bg-red-50" : "border-neutral-300 bg-neutral-50"
+                }`}
+              />
+
+              <div className="mt-2 flex items-center justify-between">
+                <span className={`text-xs font-medium ${noteEncouragement.color}`}>
+                  {noteEncouragement.text}
+                </span>
+                <span className="text-xs text-neutral-400">{notes.trim().length} chars</span>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3 — Category */}
           {urlLooksValid && (
             <div>
+              <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-neutral-400">
+                Step 3
+              </div>
               <label className="mb-2 block text-sm font-medium text-neutral-800">
                 Category
               </label>
-              <p className="mb-2 text-xs text-neutral-500">
-                Auto-selected based on the link — tap to change.
+              <p className="mb-3 text-xs text-neutral-500">
+                Auto-selected based on the link — tap to change, or type your own below.
               </p>
               <div className="flex flex-wrap gap-2">
                 {CATEGORY_OPTIONS.map((option) => (
                   <button
                     key={option}
                     type="button"
-                    onClick={() => setCategory(option)}
+                    onClick={() => {
+                      setCategory(option);
+                      setCustomCategory("");
+                    }}
                     className={
-                      option === category
+                      option === category && !customCategory.trim()
                         ? "inline-flex items-center rounded-full bg-neutral-900 px-3 py-1 text-xs font-semibold text-white"
                         : "inline-flex items-center rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs font-medium text-neutral-700 transition hover:bg-neutral-50"
                     }
@@ -472,85 +507,43 @@ useEffect(() => {
                   </button>
                 ))}
               </div>
+              <input
+                type="text"
+                placeholder="Or type a custom category…"
+                value={customCategory}
+                onChange={(e) => setCustomCategory(e.target.value)}
+                className="mt-3 w-full rounded-2xl border border-neutral-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-neutral-900"
+              />
+              {customCategory.trim() && (
+                <p className="mt-1.5 text-xs text-neutral-500">
+                  Will be saved as: <strong>{customCategory.trim()}</strong>
+                </p>
+              )}
             </div>
           )}
 
-          {/* Optional fields toggle */}
-          <div>
-            <button
-              type="button"
-              onClick={() => setShowOptionalFields((prev) => !prev)}
-              className="text-sm font-medium text-neutral-700 underline underline-offset-4"
-            >
-              {showOptionalFields ? "Hide optional fields" : "Add title or notes"}
-            </button>
-          </div>
-
-          {showOptionalFields && (
-            <div className="space-y-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-
-              {/* Title */}
-              <div>
-                <label htmlFor="title" className="mb-2 block text-sm font-medium text-neutral-800">
-                  Title
-                </label>
-                <input
-                  id="title"
-                  type="text"
-                  placeholder="Optional — auto-generated from the link"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-base outline-none transition focus:border-neutral-900"
-                />
-              </div>
-
-              {/* Notes with talk to text */}
-              <div>
-                <div className="mb-2 flex items-center justify-between">
-                  <label htmlFor="notes" className="text-sm font-medium text-neutral-800">
-                    Notes
-                  </label>
-                  {speechSupported && (
-                    <button
-                      type="button"
-                      onClick={isListening ? stopListening : startListening}
-                      className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition ${
-                        isListening
-                          ? "bg-red-100 text-red-700 animate-pulse"
-                          : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
-                      }`}
-                    >
-                      <span>{isListening ? "🔴" : "🎤"}</span>
-                      {isListening ? "Listening… tap to stop" : "Speak your note"}
-                    </button>
-                  )}
+          {/* Optional title */}
+          {urlLooksValid && (
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowTitle((prev) => !prev)}
+                className="text-xs font-medium text-neutral-500 underline underline-offset-4"
+              >
+                {showTitle ? "Hide title field" : "Edit title (optional)"}
+              </button>
+              {showTitle && (
+                <div className="mt-3">
+                  <input
+                    id="title"
+                    type="text"
+                    placeholder="Auto-generated — only change if needed"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-base outline-none transition focus:border-neutral-900"
+                  />
                 </div>
-
-                <p className="mb-2 text-xs text-neutral-500">
-                  This will appear on your pick as &quot;Why you recommend this.&quot; Tell people what makes it worth it in your own words.
-                </p>
-
-                <textarea
-                  id="notes"
-                  rows={4}
-                  placeholder={NOTE_PROMPTS[promptIndex]}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className={`w-full rounded-2xl border bg-white px-4 py-3 text-base outline-none transition focus:border-neutral-900 ${
-                    isListening ? "border-red-300" : "border-neutral-300"
-                  }`}
-                />
-
-                {/* Character encouragement */}
-                <div className="mt-1 flex items-center justify-between">
-                  <span className={`text-xs ${noteEncouragement.color}`}>
-                    {noteEncouragement.text}
-                  </span>
-                  <span className="text-xs text-neutral-400">
-                    {notes.trim().length} chars
-                  </span>
-                </div>
-              </div>
+              )}
             </div>
           )}
 
