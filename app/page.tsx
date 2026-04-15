@@ -75,7 +75,7 @@ export default function Home() {
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-gray-300 text-xs font-semibold text-gray-500">3</span>
                 <div>
                   <p className="text-sm font-semibold">Get rated & rewarded</p>
-                  <p className="mt-0.5 text-xs leading-5 text-gray-500">Build your reputation. Earn real money.</p>
+                  <p className="mt-0.5 text-xs leading-5 text-gray-500">Build your reputation. Earn rewards.</p>
                 </div>
               </div>
             </div>

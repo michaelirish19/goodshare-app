@@ -96,10 +96,10 @@ export default function OnboardingChecklist({
                   </p>
                   <a
                     href={step.href}
-                    className="mt-2 inline-block text-xs font-semibold text-black underline underline-offset-4 hover:opacity-70"
-                  >
-                    {step.cta}
-                  </a>
+  className="mt-3 inline-flex items-center justify-center rounded-xl bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:opacity-80"
+>
+  {step.cta}
+</a>
                 </>
               )}
             </div>
