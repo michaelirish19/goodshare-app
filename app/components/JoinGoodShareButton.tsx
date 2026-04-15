@@ -1,19 +1,30 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../firebase";
 import { useRouter } from "next/navigation";
 
 type Props = {
   variant?: "primary" | "secondary";
 };
 
-export default function JoinGoodShareButton({
-  variant = "primary",
-}: Props) {
+export default function JoinGoodShareButton({ variant = "primary" }: Props) {
   const router = useRouter();
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const baseStyles =
-    "rounded-lg px-4 py-2 text-sm font-medium transition";
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setLoggedIn(!!user);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
+  if (loading || loggedIn) return null;
+
+  const baseStyles = "rounded-lg px-4 py-2 text-sm font-medium transition";
   const styles =
     variant === "primary"
       ? "bg-black text-white hover:opacity-90"
