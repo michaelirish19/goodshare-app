@@ -5,6 +5,7 @@ import QRCodeCard from "../../components/QRCodeCard";
 import TrustMeter from "../../components/TrustMeter";
 import BadgeDisplay from "../../components/BadgeDisplay";
 import ProfileOwnerCheck from "../../components/ProfileOwnerCheck";
+import OwnerOnlyChecklist from "../../components/OwnerOnlyChecklist";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 
 type Recommender = {
@@ -88,6 +89,15 @@ export default async function RecommenderPage({ params }: PageProps) {
           Back to GoodShare
         </a>
 
+        {/* Onboarding checklist — only shown to owner, disappears when complete */}
+        <OwnerOnlyChecklist
+          profileUserId={recommender.userId}
+          recommenderId={id}
+          recommendationCount={recommendations.length}
+          totalOutboundClickCount={recommender.totalOutboundClickCount ?? 0}
+          totalRatings={recommender.totalRatings ?? 0}
+        />
+
         <section className="mb-6 rounded-2xl border border-gray-200 p-6 shadow-sm">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
 
@@ -144,8 +154,6 @@ export default async function RecommenderPage({ params }: PageProps) {
 
         <QRCodeCard url={`https://goodshare-app.vercel.app/recommenders/${id}`} />
 
-        {/* ProfileOwnerCheck detects client-side if viewer is the owner
-            and passes that info down to RecommendationFilter */}
         <ProfileOwnerCheck
           profileUserId={recommender.userId}
           recommenderId={id}
