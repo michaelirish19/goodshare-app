@@ -4,6 +4,7 @@ import RecommendationFilter from "../../components/RecommendationFilter";
 import QRCodeCard from "../../components/QRCodeCard";
 import TrustMeter from "../../components/TrustMeter";
 import BadgeDisplay from "../../components/BadgeDisplay";
+import ProfileOwnerCheck from "../../components/ProfileOwnerCheck";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 
 type Recommender = {
@@ -115,7 +116,6 @@ export default async function RecommenderPage({ params }: PageProps) {
             </div>
           )}
 
-          {/* Badges */}
           <BadgeDisplay
             recommenderId={id}
             recommenderData={{
@@ -144,11 +144,14 @@ export default async function RecommenderPage({ params }: PageProps) {
 
         <QRCodeCard url={`https://goodshare-app.vercel.app/recommenders/${id}`} />
 
-        <RecommendationFilter
-          recommendations={recommendations}
-          recommenderId={id}
+        {/* ProfileOwnerCheck detects client-side if viewer is the owner
+            and passes that info down to RecommendationFilter */}
+        <ProfileOwnerCheck
           profileUserId={recommender.userId}
+          recommenderId={id}
+          recommendations={recommendations}
           categories={parsedCategories}
+          recommenderName={recommender.name}
         />
 
       </div>

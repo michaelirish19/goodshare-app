@@ -17,6 +17,8 @@ type Props = {
   recommenderId: string;
   profileUserId?: string;
   categories: string[];
+  isOwner?: boolean;
+  recommenderName?: string;
 };
 
 export default function RecommendationFilter({
@@ -24,6 +26,8 @@ export default function RecommendationFilter({
   recommenderId,
   profileUserId,
   categories,
+  isOwner = false,
+  recommenderName = "This sharer",
 }: Props) {
   const [selectedCategory, setSelectedCategory] = useState("All");
 
@@ -53,6 +57,66 @@ export default function RecommendationFilter({
           [...items].sort((a, b) => a.title.localeCompare(b.title)),
         ] as const
     );
+
+  // ── Empty state — zero picks total ──
+  if (recommendations.length === 0) {
+    if (isOwner) {
+      return (
+        <section className="mt-8">
+          <div className="rounded-2xl border-2 border-dashed border-gray-200 px-6 py-12 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-2xl">
+              📌
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">
+              Add your first pick
+            </h3>
+            <p className="mt-2 max-w-sm mx-auto text-sm leading-6 text-gray-500">
+              Your picks are your recommendations — the products, tools, and resources you genuinely use and trust. Start building your reputation.
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <a
+                href={`/add?recommenderId=${recommenderId}`}
+                className="inline-flex items-center justify-center rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:opacity-80"
+              >
+                Add your first pick →
+              </a>
+            </div>
+            <div className="mt-8 border-t border-gray-100 pt-6">
+              <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">
+                Here&apos;s how it works
+              </p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:gap-6 text-left max-w-lg mx-auto">
+                <div className="flex gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-500">1</span>
+                  <p className="text-xs leading-5 text-gray-500">Paste a link to anything you recommend</p>
+                </div>
+                <div className="flex gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-500">2</span>
+                  <p className="text-xs leading-5 text-gray-500">Tell people why you recommend it in your own words</p>
+                </div>
+                <div className="flex gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-500">3</span>
+                  <p className="text-xs leading-5 text-gray-500">Share your profile link or QR code anywhere</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    // Visitor sees a different empty state
+    return (
+      <section className="mt-8">
+        <div className="rounded-2xl border border-dashed border-gray-200 px-6 py-12 text-center">
+          <p className="text-sm font-medium text-gray-400">
+            {recommenderName} hasn&apos;t added any picks yet.
+          </p>
+          <p className="mt-1 text-xs text-gray-400">Check back soon.</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="mt-8">
@@ -160,8 +224,19 @@ export default function RecommendationFilter({
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-gray-200 px-6 py-12 text-center">
-          <p className="text-sm font-medium text-gray-400">No picks in this category.</p>
+        // Empty state — filtered category has no results
+        <div className="rounded-2xl border border-dashed border-gray-200 px-6 py-10 text-center">
+          <p className="text-sm font-medium text-gray-400">
+            No picks in this category yet.
+          </p>
+          {isOwner && (
+            <a
+              href={`/add?recommenderId=${recommenderId}`}
+              className="mt-4 inline-block rounded-xl bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:opacity-80"
+            >
+              Add a pick in this category →
+            </a>
+          )}
         </div>
       )}
     </section>
