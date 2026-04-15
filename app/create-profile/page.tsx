@@ -21,6 +21,8 @@ function CreateProfileForm() {
   const [checkingProfile, setCheckingProfile] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+  const [savedUserId, setSavedUserId] = useState<string | null>(null);
+  const [savedName, setSavedName] = useState("");
 
   const addCategory = () => {
     const trimmed = categoryInput.trim();
@@ -113,7 +115,6 @@ function CreateProfileForm() {
     setIsSaving(true);
 
     try {
-      // Save the profile
       await setDoc(doc(db, "recommenders", user.uid), {
         name: trimmedName,
         role: trimmedRole,
@@ -125,12 +126,12 @@ function CreateProfileForm() {
         totalRatingScore: 0,
         totalOutboundClickCount: 0,
         referralCount: 0,
+        isBetaUser: true,
         ...(ref ? { referredBy: ref } : {}),
         ...(pick ? { referredByPick: pick } : {}),
         ...(ref ? { referredAt: serverTimestamp() } : {}),
       });
 
-      // If referred by a sharer, increment their referral count
       if (ref) {
         try {
           const referrerRef = doc(db, "recommenders", ref);
@@ -138,12 +139,13 @@ function CreateProfileForm() {
             referralCount: increment(1),
           });
         } catch (referralError) {
-          // Don't block profile creation if referral tracking fails
           console.error("Referral tracking failed:", referralError);
         }
       }
 
-      router.push("/");
+      // Show welcome screen instead of redirecting
+      setSavedUserId(user.uid);
+      setSavedName(trimmedName);
     } catch (error) {
       console.error("Error creating profile:", error);
       setError("Could not save profile. Please try again.");
@@ -153,11 +155,97 @@ function CreateProfileForm() {
   };
 
   if (checkingProfile) {
+    return <div className="text-sm text-gray-500">Loading...</div>;
+  }
+
+  // ── Welcome screen ──
+  if (savedUserId) {
+    const firstName = savedName.split(" ")[0];
     return (
-      <div className="text-sm text-gray-500">Loading...</div>
+      <div className="text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl">
+          🎉
+        </div>
+        <h1 className="text-3xl font-bold tracking-tight">
+          Welcome to GoodShare, {firstName}!
+        </h1>
+        <p className="mt-3 text-sm leading-6 text-gray-600">
+          Your profile is live. Here&apos;s how to make the most of it right now.
+        </p>
+
+        {/* Three next steps */}
+        <div className="mt-8 space-y-3 text-left">
+
+          {/* Step 1 — Add a pick */}
+          <a
+            href={`/add?recommenderId=${savedUserId}`}
+            className="flex items-start gap-4 rounded-2xl border-2 border-black bg-black p-5 text-white transition hover:opacity-90"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-black text-lg font-bold">
+              1
+            </div>
+            <div>
+              <p className="font-semibold">Add your first pick</p>
+              <p className="mt-0.5 text-xs leading-5 text-gray-300">
+                Paste a link to something you genuinely recommend. Your first pick earns you your first badge.
+              </p>
+            </div>
+          </a>
+
+          {/* Step 2 — Share profile */}
+          <a
+            href={`/recommenders/${savedUserId}`}
+            className="flex items-start gap-4 rounded-2xl border border-gray-200 p-5 transition hover:border-gray-300 hover:shadow-sm"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-700 text-lg font-bold">
+              2
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">View your profile</p>
+              <p className="mt-0.5 text-xs leading-5 text-gray-500">
+                See how your profile looks to others. Grab your QR code and share it with someone today.
+              </p>
+            </div>
+          </a>
+
+          {/* Step 3 — Discover */}
+          <a
+            href="/discover"
+            className="flex items-start gap-4 rounded-2xl border border-gray-200 p-5 transition hover:border-gray-300 hover:shadow-sm"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-700 text-lg font-bold">
+              3
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">Explore other sharers</p>
+              <p className="mt-0.5 text-xs leading-5 text-gray-500">
+                Browse picks from real people. Rate something you&apos;ve already bought and help build the community.
+              </p>
+            </div>
+          </a>
+        </div>
+
+        {/* Founding Sharer badge callout */}
+        <div className="mt-6 rounded-2xl border border-green-200 bg-green-50 px-5 py-4">
+          <p className="text-sm font-semibold text-green-800">
+            🌱 You&apos;re a Founding Sharer
+          </p>
+          <p className="mt-1 text-xs leading-5 text-green-700">
+            You joined GoodShare during beta. This badge will always be on your profile — a mark of the people who were here first.
+          </p>
+        </div>
+
+        <button
+          onClick={() => router.push("/")}
+          className="mt-6 text-sm text-gray-400 underline underline-offset-4 transition hover:text-gray-600"
+        >
+          Go to home page
+        </button>
+      </div>
     );
   }
 
+  // ── Profile form ──
   return (
     <div className="rounded-2xl border border-gray-200 p-6 shadow-sm">
       <div className="mb-6">
