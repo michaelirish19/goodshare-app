@@ -37,10 +37,43 @@ export default function GoRedirectClient({
     .join("")
     .toUpperCase();
 
+  // Save referral to localStorage for non-logged-in users
+  useEffect(() => {
+    try {
+      const existing = localStorage.getItem("goodshare_referral");
+      const parsed = existing ? JSON.parse(existing) : null;
+
+      // Only save if there isn't already a fresher referral
+      if (!parsed || parsed.recommendationId !== recommendationId) {
+        localStorage.setItem(
+          "goodshare_referral",
+          JSON.stringify({
+            recommenderId,
+            recommendationId,
+            recommenderName,
+            pickTitle: recommendationTitle,
+            savedAt: Date.now(),
+          })
+        );
+      }
+    } catch {
+      // localStorage not available — silently ignore
+    }
+  }, [recommenderId, recommendationId, recommenderName, recommendationTitle]);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
+
+      // If user is logged in, clear the referral — they don't need the banner
+      if (currentUser) {
+        try {
+          localStorage.removeItem("goodshare_referral");
+        } catch {
+          // ignore
+        }
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -129,7 +162,6 @@ export default function GoRedirectClient({
 
           <div className="mt-8 border-t border-gray-100 pt-6">
 
-            {/* ── Logged in — show rate CTA directly ── */}
             {isLoggedIn && !isOwnProfile && (
               <>
                 <p className="text-sm font-medium text-gray-800">
@@ -149,7 +181,6 @@ export default function GoRedirectClient({
               </>
             )}
 
-            {/* ── Logged in — viewing own pick ── */}
             {isLoggedIn && isOwnProfile && (
               <>
                 <p className="text-sm font-medium text-gray-800">
@@ -169,7 +200,6 @@ export default function GoRedirectClient({
               </>
             )}
 
-            {/* ── Not logged in — show signup/login ── */}
             {!isLoggedIn && !authLoading && (
               <>
                 <p className="text-sm font-medium text-gray-800">
@@ -203,13 +233,9 @@ export default function GoRedirectClient({
               </>
             )}
 
-            {/* ── Auth still loading — show nothing yet ── */}
-            {authLoading && (
-              <div className="h-16" />
-            )}
+            {authLoading && <div className="h-16" />}
 
           </div>
-
         </section>
 
         <p className="mt-6 text-center text-xs text-gray-400">
