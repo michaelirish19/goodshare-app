@@ -3,6 +3,7 @@
 import { useState } from "react";
 import RecommendationCardQR from "./RecommendationCardQR";
 import OwnerControls from "./OwnerControls";
+import ShareButton from "./ShareButton";
 
 type Recommendation = {
   id: string;
@@ -105,7 +106,6 @@ export default function RecommendationFilter({
       );
     }
 
-    // Visitor sees a different empty state
     return (
       <section className="mt-8">
         <div className="rounded-2xl border border-dashed border-gray-200 px-6 py-12 text-center">
@@ -207,6 +207,12 @@ export default function RecommendationFilter({
                       >
                         Rate this pick
                       </a>
+                      <ShareButton
+                        title={item.title}
+                        url={`https://goodshare-app.vercel.app/go/${recommenderId}/${item.id}`}
+                        note={item.description}
+                        recommenderName={recommenderName}
+                      />
                       <RecommendationCardQR
                         url={`https://goodshare-app.vercel.app/go/${recommenderId}/${item.id}`}
                       />
@@ -224,7 +230,6 @@ export default function RecommendationFilter({
           ))}
         </div>
       ) : (
-        // Empty state — filtered category has no results
         <div className="rounded-2xl border border-dashed border-gray-200 px-6 py-10 text-center">
           <p className="text-sm font-medium text-gray-400">
             No picks in this category yet.
