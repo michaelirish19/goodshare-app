@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
+import { writeActivity } from "@/lib/writeActivity";
 
 type PreviewData = {
   title: string;
@@ -14,12 +15,7 @@ type PreviewData = {
 };
 
 const CATEGORY_OPTIONS = [
-  "Product",
-  "Tools",
-  "Gear",
-  "Clothes",
-  "Accessories",
-  "Other",
+  "Product", "Tools", "Gear", "Clothes", "Accessories", "Other",
 ];
 
 const NOTE_PROMPTS = [
@@ -31,12 +27,7 @@ const NOTE_PROMPTS = [
 ];
 
 function isValidUrl(value: string) {
-  try {
-    new URL(value);
-    return true;
-  } catch {
-    return false;
-  }
+  try { new URL(value); return true; } catch { return false; }
 }
 
 function normalizeUrl(input: string) {
@@ -56,18 +47,12 @@ function fallbackTitleFromUrl(rawUrl: string) {
       return cleanedPath.charAt(0).toUpperCase() + cleanedPath.slice(1);
     }
     return hostname;
-  } catch {
-    return "";
-  }
+  } catch { return ""; }
 }
 
 function prettyHostname(rawUrl: string) {
-  try {
-    const url = new URL(rawUrl);
-    return url.hostname.replace(/^www\./, "");
-  } catch {
-    return "";
-  }
+  try { const url = new URL(rawUrl); return url.hostname.replace(/^www\./, ""); }
+  catch { return ""; }
 }
 
 function inferCategory(rawUrl: string) {
@@ -82,9 +67,7 @@ function inferCategory(rawUrl: string) {
     if (host.includes("medium.com") || host.includes("substack.com")) return "Article";
     if (host.includes("spotify.com") || host.includes("podcasts.apple.com")) return "Podcast";
     return "Other";
-  } catch {
-    return "Other";
-  }
+  } catch { return "Other"; }
 }
 
 function getNoteEncouragement(length: number): { text: string; color: string } {
@@ -99,26 +82,23 @@ export default function AddRecommendationPage() {
   const router = useRouter();
 
   const [userId, setUserId] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>("");
   const [authLoading, setAuthLoading] = useState(true);
-
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [category, setCategory] = useState("");
   const [customCategory, setCustomCategory] = useState("");
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFetchingPreview, setIsFetchingPreview] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
-
+  const [savedPickId, setSavedPickId] = useState<string>("");
   const [preview, setPreview] = useState<PreviewData | null>(null);
   const [showTitle, setShowTitle] = useState(false);
-
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
   const recognitionRef = useRef<unknown>(null);
-
   const [promptIndex] = useState(() => Math.floor(Math.random() * NOTE_PROMPTS.length));
 
   useEffect(() => {
@@ -128,9 +108,18 @@ export default function AddRecommendationPage() {
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUserId(user?.uid ?? null);
       setAuthLoading(false);
+      if (user) {
+        try {
+          const profileRef = doc(db, "recommenders", user.uid);
+          const profileSnap = await getDoc(profileRef);
+          if (profileSnap.exists()) {
+            setUserName(profileSnap.data().name || "");
+          }
+        } catch { /* ignore */ }
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -154,37 +143,27 @@ export default function AddRecommendationPage() {
 
   function startListening() {
     type SpeechRecognitionConstructor = new () => {
-      continuous: boolean;
-      interimResults: boolean;
-      lang: string;
+      continuous: boolean; interimResults: boolean; lang: string;
       onresult: ((event: unknown) => void) | null;
-      onend: (() => void) | null;
-      onerror: (() => void) | null;
-      start: () => void;
-      stop: () => void;
+      onend: (() => void) | null; onerror: (() => void) | null;
+      start: () => void; stop: () => void;
     };
-
     const SpeechRecognitionAPI = (
       (window as unknown as Record<string, unknown>)["SpeechRecognition"] ||
       (window as unknown as Record<string, unknown>)["webkitSpeechRecognition"]
     ) as SpeechRecognitionConstructor | undefined;
-
     if (!SpeechRecognitionAPI) return;
-
     const recognition = new SpeechRecognitionAPI();
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.lang = "en-US";
-
     recognition.onresult = (event: unknown) => {
       const e = event as { results: Array<Array<{ transcript: string }>> };
       const transcript = e.results[0][0].transcript;
       setNotes((prev) => (prev ? `${prev} ${transcript}` : transcript));
     };
-
     recognition.onend = () => setIsListening(false);
     recognition.onerror = () => setIsListening(false);
-
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
@@ -198,81 +177,45 @@ export default function AddRecommendationPage() {
 
   useEffect(() => {
     setError("");
-    if (!urlLooksValid) {
-      setPreview(null);
-      setCategory("");
-      return;
-    }
+    if (!urlLooksValid) { setPreview(null); setCategory(""); return; }
     setCategory(inferCategory(normalizedUrl));
 
     async function fetchPreview(targetUrl: string) {
       if (!isValidUrl(targetUrl)) return;
       setIsFetchingPreview(true);
       try {
-        const response = await fetch(
-          `/api/link-preview?url=${encodeURIComponent(targetUrl)}`,
-          { method: "GET", cache: "no-store" }
-        );
+        const response = await fetch(`/api/link-preview?url=${encodeURIComponent(targetUrl)}`, { method: "GET", cache: "no-store" });
         if (!response.ok) throw new Error("Preview unavailable");
         const data = await response.json();
         const nextPreview: PreviewData = {
-          title: data?.title ?? "",
-          description: data?.description ?? "",
-          image: data?.image ?? "",
-          siteName: data?.siteName ?? "",
+          title: data?.title ?? "", description: data?.description ?? "",
+          image: data?.image ?? "", siteName: data?.siteName ?? "",
         };
         setPreview(nextPreview);
-        if (!title.trim() && nextPreview.title?.trim()) {
-          setTitle(nextPreview.title.trim());
-        }
+        if (!title.trim() && nextPreview.title?.trim()) setTitle(nextPreview.title.trim());
       } catch {
-        setPreview({
-          title: fallbackTitleFromUrl(targetUrl),
-          description: "",
-          image: "",
-          siteName: prettyHostname(targetUrl),
-        });
-        if (!title.trim()) {
-          setTitle(fallbackTitleFromUrl(targetUrl));
-        }
-      } finally {
-        setIsFetchingPreview(false);
-      }
+        setPreview({ title: fallbackTitleFromUrl(targetUrl), description: "", image: "", siteName: prettyHostname(targetUrl) });
+        if (!title.trim()) setTitle(fallbackTitleFromUrl(targetUrl));
+      } finally { setIsFetchingPreview(false); }
     }
 
-    const timer = setTimeout(() => {
-      fetchPreview(normalizedUrl);
-    }, 500);
-
+    const timer = setTimeout(() => { fetchPreview(normalizedUrl); }, 500);
     return () => clearTimeout(timer);
   }, [normalizedUrl, urlLooksValid]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
-
-    if (authLoading) {
-      setError("Still checking your login. Try again in a moment.");
-      return;
-    }
-    if (!userId) {
-      setError("You need to be logged in to save a pick.");
-      return;
-    }
-    if (!normalizedUrl || !isValidUrl(normalizedUrl)) {
-      setError("Paste a valid link to save something.");
-      return;
-    }
+    if (authLoading) { setError("Still checking your login. Try again in a moment."); return; }
+    if (!userId) { setError("You need to be logged in to save a pick."); return; }
+    if (!normalizedUrl || !isValidUrl(normalizedUrl)) { setError("Paste a valid link to save something."); return; }
     const finalTitle = derivedTitle.trim();
-    if (!finalTitle) {
-      setError("We could not generate a title. Add one manually and try again.");
-      return;
-    }
+    if (!finalTitle) { setError("We could not generate a title. Add one manually and try again."); return; }
 
     setIsSubmitting(true);
 
     try {
-      await addDoc(collection(db, "recommenders", userId, "recommendations"), {
+      const docRef = await addDoc(collection(db, "recommenders", userId, "recommendations"), {
         recommenderId: userId,
         userId,
         url: normalizedUrl,
@@ -286,6 +229,7 @@ export default function AddRecommendationPage() {
         outboundClickCount: 0,
       });
 
+      // Sync categories
       const recommenderRef = doc(db, "recommenders", userId);
       const recommenderSnap = await getDoc(recommenderRef);
       if (recommenderSnap.exists()) {
@@ -295,12 +239,17 @@ export default function AddRecommendationPage() {
           : [];
         if (finalCategory && !currentCategories.includes(finalCategory)) {
           const updated = [...currentCategories, finalCategory].sort((a, b) => a.localeCompare(b));
-          await updateDoc(recommenderRef, {
-            categories: updated.join(" • "),
-          });
+          await updateDoc(recommenderRef, { categories: updated.join(" • ") });
         }
       }
 
+      // Write activity event
+      await writeActivity("new_pick", userId, userName || "Someone", {
+        pickTitle: finalTitle,
+        pickId: docRef.id,
+      });
+
+      setSavedPickId(docRef.id);
       setSaved(true);
     } catch (err) {
       console.error(err);
@@ -326,35 +275,18 @@ export default function AddRecommendationPage() {
     return (
       <main className="mx-auto flex min-h-[70vh] w-full max-w-2xl items-center justify-center px-4 py-10">
         <div className="w-full rounded-3xl border border-neutral-200 bg-white p-8 text-center shadow-sm">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl">
-            🎉
-          </div>
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl">🎉</div>
           <h2 className="text-2xl font-bold tracking-tight text-neutral-950">Pick saved!</h2>
-          <p className="mt-2 text-sm text-neutral-600">
-            <strong>{derivedTitle}</strong> has been added to your profile.
-          </p>
+          <p className="mt-2 text-sm text-neutral-600"><strong>{derivedTitle}</strong> has been added to your profile.</p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <button
-              onClick={() => {
-                setSaved(false);
-                setUrl("");
-                setTitle("");
-                setNotes("");
-                setCategory("");
-                setCustomCategory("");
-                setPreview(null);
-                setShowTitle(false);
-              }}
+              onClick={() => { setSaved(false); setUrl(""); setTitle(""); setNotes(""); setCategory(""); setCustomCategory(""); setPreview(null); setShowTitle(false); }}
               className="inline-flex items-center justify-center rounded-2xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:opacity-80"
-            >
-              Add another pick
-            </button>
+            >Add another pick</button>
             <button
               onClick={() => router.push(`/recommenders/${userId}`)}
               className="inline-flex items-center justify-center rounded-2xl border border-neutral-300 px-6 py-3 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
-            >
-              View my profile
-            </button>
+            >View my profile</button>
           </div>
         </div>
       </main>
@@ -364,44 +296,23 @@ export default function AddRecommendationPage() {
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-6 sm:py-10">
       <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-8">
-
         <div className="mb-6">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
-            Save something good
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight text-neutral-950">
-            Add a Pick
-          </h1>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-neutral-600">
-            Paste a link. Then tell people why it&apos;s worth it — that&apos;s what makes your pick worth sharing.
-          </p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">Save something good</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-neutral-950">Add a Pick</h1>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-neutral-600">Paste a link. Then tell people why it&apos;s worth it — that&apos;s what makes your pick worth sharing.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-
-          {/* Step 1 — URL */}
           <div>
-            <label htmlFor="url" className="mb-1 block text-xs font-semibold uppercase tracking-widest text-neutral-400">
-              Step 1
-            </label>
-            <label htmlFor="url" className="mb-2 block text-sm font-medium text-neutral-800">
-              Paste your link
-            </label>
-            <input
-              id="url"
-              type="text"
-              inputMode="url"
-              autoCapitalize="off"
-              autoCorrect="off"
-              autoComplete="off"
+            <label htmlFor="url" className="mb-1 block text-xs font-semibold uppercase tracking-widest text-neutral-400">Step 1</label>
+            <label htmlFor="url" className="mb-2 block text-sm font-medium text-neutral-800">Paste your link</label>
+            <input id="url" type="text" inputMode="url" autoCapitalize="off" autoCorrect="off" autoComplete="off"
               placeholder="Paste a product, article, video, or any page link"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
+              value={url} onChange={(e) => setUrl(e.target.value)}
               className="w-full rounded-2xl border border-neutral-300 px-4 py-3 text-base outline-none transition focus:border-neutral-900"
             />
           </div>
 
-          {/* Preview card */}
           {urlLooksValid && (
             <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
               <div className="flex items-start justify-between gap-3">
@@ -411,134 +322,75 @@ export default function AddRecommendationPage() {
                     {isFetchingPreview ? "Fetching title…" : derivedTitle || "Could not generate title — add one below"}
                   </h2>
                   <p className="mt-1 break-all text-xs text-neutral-500">{normalizedUrl}</p>
-                  {preview?.description && (
-                    <p className="mt-2 line-clamp-3 text-sm text-neutral-600">{preview.description}</p>
-                  )}
+                  {preview?.description && <p className="mt-2 line-clamp-3 text-sm text-neutral-600">{preview.description}</p>}
                 </div>
-                {preview?.image && (
-                  <img src={preview.image} alt="" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
-                )}
+                {preview?.image && <img src={preview.image} alt="" className="h-16 w-16 shrink-0 rounded-xl object-cover" />}
               </div>
-              <div className="mt-3 text-xs text-neutral-500">
-                {isFetchingPreview ? "Fetching preview…" : "Looks ready to save."}
-              </div>
+              <div className="mt-3 text-xs text-neutral-500">{isFetchingPreview ? "Fetching preview…" : "Looks ready to save."}</div>
             </div>
           )}
 
-          {/* Step 2 — Why (front and center) */}
           {urlLooksValid && (
             <div className="rounded-2xl border-2 border-neutral-900 p-5">
-              <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-neutral-400">
-                Step 2
-              </div>
+              <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-neutral-400">Step 2</div>
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
-                  <label htmlFor="notes" className="block text-base font-bold text-neutral-900">
-                    Why do you recommend this?
-                  </label>
-                  <p className="mt-1 text-xs text-neutral-500">
-                    This is your voice — the most important part of your pick. Speak or type it.
-                  </p>
+                  <label htmlFor="notes" className="block text-base font-bold text-neutral-900">Why do you recommend this?</label>
+                  <p className="mt-1 text-xs text-neutral-500">This is your voice — the most important part of your pick. Speak or type it.</p>
                 </div>
                 {speechSupported && (
-                  <button
-                    type="button"
-                    onClick={isListening ? stopListening : startListening}
-                    className={`shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition ${
-                      isListening
-                        ? "bg-red-100 text-red-700 animate-pulse"
-                        : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
-                    }`}
-                  >
+                  <button type="button" onClick={isListening ? stopListening : startListening}
+                    className={`shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition ${isListening ? "bg-red-100 text-red-700 animate-pulse" : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"}`}>
                     <span>{isListening ? "🔴" : "🎤"}</span>
                     {isListening ? "Listening…" : "Speak it"}
                   </button>
                 )}
               </div>
-
-              <textarea
-                id="notes"
-                rows={4}
-                placeholder={NOTE_PROMPTS[promptIndex]}
-                value={notes}
+              <textarea id="notes" rows={4} placeholder={NOTE_PROMPTS[promptIndex]} value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className={`w-full rounded-2xl border px-4 py-3 text-base outline-none transition focus:border-neutral-900 ${
-                  isListening ? "border-red-300 bg-red-50" : "border-neutral-300 bg-neutral-50"
-                }`}
+                className={`w-full rounded-2xl border px-4 py-3 text-base outline-none transition focus:border-neutral-900 ${isListening ? "border-red-300 bg-red-50" : "border-neutral-300 bg-neutral-50"}`}
               />
-
               <div className="mt-2 flex items-center justify-between">
-                <span className={`text-xs font-medium ${noteEncouragement.color}`}>
-                  {noteEncouragement.text}
-                </span>
+                <span className={`text-xs font-medium ${noteEncouragement.color}`}>{noteEncouragement.text}</span>
                 <span className="text-xs text-neutral-400">{notes.trim().length} chars</span>
               </div>
             </div>
           )}
 
-          {/* Step 3 — Category */}
           {urlLooksValid && (
             <div>
-              <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-neutral-400">
-                Step 3
-              </div>
-              <label className="mb-2 block text-sm font-medium text-neutral-800">
-                Category
-              </label>
-              <p className="mb-3 text-xs text-neutral-500">
-                Auto-selected based on the link — tap to change, or type your own below.
-              </p>
+              <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-neutral-400">Step 3</div>
+              <label className="mb-2 block text-sm font-medium text-neutral-800">Category</label>
+              <p className="mb-3 text-xs text-neutral-500">Auto-selected based on the link — tap to change, or type your own below.</p>
               <div className="flex flex-wrap gap-2">
                 {CATEGORY_OPTIONS.map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => {
-                      setCategory(option);
-                      setCustomCategory("");
-                    }}
-                    className={
-                      option === category && !customCategory.trim()
-                        ? "inline-flex items-center rounded-full bg-neutral-900 px-3 py-1 text-xs font-semibold text-white"
-                        : "inline-flex items-center rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs font-medium text-neutral-700 transition hover:bg-neutral-50"
-                    }
-                  >
+                  <button key={option} type="button" onClick={() => { setCategory(option); setCustomCategory(""); }}
+                    className={option === category && !customCategory.trim()
+                      ? "inline-flex items-center rounded-full bg-neutral-900 px-3 py-1 text-xs font-semibold text-white"
+                      : "inline-flex items-center rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs font-medium text-neutral-700 transition hover:bg-neutral-50"}>
                     {option}
                   </button>
                 ))}
               </div>
-              <input
-                type="text"
-                placeholder="Or type a custom category…"
-                value={customCategory}
+              <input type="text" placeholder="Or type a custom category…" value={customCategory}
                 onChange={(e) => setCustomCategory(e.target.value)}
                 className="mt-3 w-full rounded-2xl border border-neutral-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-neutral-900"
               />
               {customCategory.trim() && (
-                <p className="mt-1.5 text-xs text-neutral-500">
-                  Will be saved as: <strong>{customCategory.trim()}</strong>
-                </p>
+                <p className="mt-1.5 text-xs text-neutral-500">Will be saved as: <strong>{customCategory.trim()}</strong></p>
               )}
             </div>
           )}
 
-          {/* Optional title */}
           {urlLooksValid && (
             <div>
-              <button
-                type="button"
-                onClick={() => setShowTitle((prev) => !prev)}
-                className="text-xs font-medium text-neutral-500 underline underline-offset-4"
-              >
+              <button type="button" onClick={() => setShowTitle((prev) => !prev)}
+                className="text-xs font-medium text-neutral-500 underline underline-offset-4">
                 {showTitle ? "Hide title field" : "Edit title (optional)"}
               </button>
               {showTitle && (
                 <div className="mt-3">
-                  <input
-                    id="title"
-                    type="text"
-                    placeholder="Auto-generated — only change if needed"
-                    value={title}
+                  <input id="title" type="text" placeholder="Auto-generated — only change if needed" value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     className="w-full rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-base outline-none transition focus:border-neutral-900"
                   />
@@ -547,29 +399,18 @@ export default function AddRecommendationPage() {
             </div>
           )}
 
-          {error && (
-            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
-          )}
+          {error && <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <button
-              type="submit"
-              disabled={isSubmitting || !url.trim()}
-              className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-black px-5 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-            >
+            <button type="submit" disabled={isSubmitting || !url.trim()}
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-black px-5 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">
               {isSubmitting ? "Saving…" : "Save to profile"}
             </button>
-            <button
-              type="button"
-              onClick={() => router.push(`/recommenders/${userId}`)}
-              className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-neutral-300 px-5 py-3 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
-            >
+            <button type="button" onClick={() => router.push(`/recommenders/${userId}`)}
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-neutral-300 px-5 py-3 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50">
               Cancel
             </button>
           </div>
-
         </form>
       </div>
     </main>

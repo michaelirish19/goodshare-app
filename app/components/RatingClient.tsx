@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp, updateDoc, increment } from "firebase/firestore";
+import { writeActivity } from "../lib/writeActivity";
 import { auth, db } from "../firebase";
 
 type Props = {
@@ -231,12 +232,15 @@ export default function RatingClient({
       });
 
       const recommenderRef = doc(db, "recommenders", recommenderId);
-      await updateDoc(recommenderRef, {
-        totalRatingScore: increment(score),
-        totalRatings: increment(1),
-      });
+await updateDoc(recommenderRef, {
+  totalRatingScore: increment(score),
+  totalRatings: increment(1),
+});
 
-      setSubmitted(true);
+// Write activity event
+await writeActivity("rating_received", recommenderId, recommenderName);
+
+setSubmitted(true);
     } catch (err) {
       console.error("Rating submission failed:", err);
       setError("Something went wrong. Please try again.");

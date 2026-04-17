@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, orderBy, limit, doc, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
+import { writeActivity } from "../lib/writeActivity";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
 
@@ -208,7 +209,15 @@ export default function BadgeDisplay({
 
     // Show toast for the first new badge
     setNewBadge(newOnes[0]);
-    setShowToast(true);
+setShowToast(true);
+
+// Write activity for each new badge
+newOnes.forEach((badge) => {
+  writeActivity("badge_earned", recommenderId, recommenderData.name, {
+    badgeLabel: badge.label,
+    badgeEmoji: badge.emoji,
+  });
+});
 
     // Mark all earned badges as seen
     const profileRef = doc(db, "recommenders", recommenderId);
