@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp, updateDoc, increment } from "firebase/firestore";
-import { writeActivity } from "../lib/writeActivity";
+import { writeActivity } from "@/lib/writeActivity";
 import { auth, db } from "../firebase";
 
 type Props = {

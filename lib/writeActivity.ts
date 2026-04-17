@@ -20,7 +20,6 @@ export async function writeActivity(
   recommenderName: string,
   payload: ActivityPayload = {}
 ) {
-  console.log("writeActivity called:", type, recommenderId, recommenderName);
   try {
     await addDoc(collection(db, "activity"), {
       type,
@@ -29,8 +28,8 @@ export async function writeActivity(
       payload,
       createdAt: serverTimestamp(),
     });
-    console.log("writeActivity succeeded");
   } catch (err) {
+    // Never block the main action if activity write fails
     console.error("Activity write failed:", err);
   }
 }
