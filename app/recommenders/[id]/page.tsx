@@ -129,17 +129,17 @@ export default async function RecommenderPage({ params }: PageProps) {
           <BadgeDisplay
             recommenderId={id}
             recommenderData={{
-  name: recommender.name,
-  role: recommender.role,
-  description: recommender.description,
-  createdAt: recommender.createdAt ? { seconds: recommender.createdAt.seconds } : undefined,
-  lastActiveAt: recommender.lastActiveAt ? { seconds: recommender.lastActiveAt.seconds } : undefined,
-  totalRatings: recommender.totalRatings,
-  totalRatingScore: recommender.totalRatingScore,
-  totalOutboundClickCount: recommender.totalOutboundClickCount,
-  referralCount: recommender.referralCount,
-  isBetaUser: recommender.isBetaUser,
-}}
+              name: recommender.name,
+              role: recommender.role,
+              description: recommender.description,
+              createdAt: recommender.createdAt,
+              lastActiveAt: recommender.lastActiveAt,
+              totalRatings: recommender.totalRatings,
+              totalRatingScore: recommender.totalRatingScore,
+              totalOutboundClickCount: recommender.totalOutboundClickCount,
+              referralCount: recommender.referralCount,
+              isBetaUser: recommender.isBetaUser,
+            }}
             recommendationCount={recommendations.length}
           />
 
