@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, orderBy, limit, doc, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
-import { writeActivity } from "../lib/writeActivity";
+import { writeActivity } from "@/lib/writeActivity";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
 
