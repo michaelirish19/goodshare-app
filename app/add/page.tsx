@@ -244,14 +244,17 @@ export default function AddRecommendationPage() {
         }
       }
 
-      // Write activity event
-      await writeActivity("new_pick", userId, userName || "Someone", {
-        pickTitle: finalTitle,
-        pickId: docRef.id,
-      });
+     // Write activity event
+await writeActivity("new_pick", userId, userName || "Someone", {
+  pickTitle: finalTitle,
+  pickId: docRef.id,
+});
 
-      setSavedPickId(docRef.id);
-      setSaved(true);
+// Increment global pick count
+await incrementPickCount();
+
+setSavedPickId(docRef.id);
+setSaved(true);
     } catch (err) {
       console.error(err);
       setError("Something went wrong while saving. Please try again.");

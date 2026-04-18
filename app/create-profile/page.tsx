@@ -6,7 +6,6 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, getDoc, setDoc, updateDoc, increment, serverTimestamp } from "firebase/firestore";
 import { writeActivity, incrementSharerCount } from "@/lib/writeActivity";
-await incrementSharerCount();
 
 function CreateProfileForm() {
   const router = useRouter();
@@ -101,8 +100,9 @@ function CreateProfileForm() {
         }
       }
 
-      // Write activity event
+      // Write activity event and increment stat
       await writeActivity("new_sharer", user.uid, trimmedName);
+      await incrementSharerCount();
 
       setSavedUserId(user.uid);
       setSavedName(trimmedName);
@@ -116,45 +116,111 @@ function CreateProfileForm() {
 
   if (checkingProfile) return <div className="text-sm text-gray-500">Loading...</div>;
 
+  // ── Welcome screen ──
   if (savedUserId) {
     const firstName = savedName.split(" ")[0];
+    const cameFromPick = ref && pick;
+
     return (
       <div className="text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl">🎉</div>
         <h1 className="text-3xl font-bold tracking-tight">Welcome to GoodShare, {firstName}!</h1>
-        <p className="mt-3 text-sm leading-6 text-gray-600">Your profile is live. Here&apos;s how to make the most of it right now.</p>
+        <p className="mt-3 text-sm leading-6 text-gray-600">
+          Your profile is live. Here&apos;s how to make the most of it right now.
+        </p>
+
         <div className="mt-8 space-y-3 text-left">
-          <a href={`/add?recommenderId=${savedUserId}`} className="flex items-start gap-4 rounded-2xl border-2 border-black bg-black p-5 text-white transition hover:opacity-90">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-black text-lg font-bold">1</div>
-            <div>
-              <p className="font-semibold">Add your first pick</p>
-              <p className="mt-0.5 text-xs leading-5 text-gray-300">Paste a link to something you genuinely recommend. Your first pick earns you your first badge.</p>
-            </div>
-          </a>
-          <a href={`/recommenders/${savedUserId}`} className="flex items-start gap-4 rounded-2xl border border-gray-200 p-5 transition hover:border-gray-300 hover:shadow-sm">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-700 text-lg font-bold">2</div>
-            <div>
-              <p className="font-semibold text-gray-900">View your profile</p>
-              <p className="mt-0.5 text-xs leading-5 text-gray-500">See how your profile looks to others. Grab your QR code and share it with someone today.</p>
-            </div>
-          </a>
-          <a href="/discover" className="flex items-start gap-4 rounded-2xl border border-gray-200 p-5 transition hover:border-gray-300 hover:shadow-sm">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-700 text-lg font-bold">3</div>
-            <div>
-              <p className="font-semibold text-gray-900">Explore other sharers</p>
-              <p className="mt-0.5 text-xs leading-5 text-gray-500">Browse picks from real people. Rate something you&apos;ve already bought and help build the community.</p>
-            </div>
-          </a>
+
+          {/* If they came from a pick — show rating CTA first */}
+          {cameFromPick ? (
+            <>
+              <a
+                href={`/rate/${ref}/${pick}`}
+                className="flex items-start gap-4 rounded-2xl border-2 border-black bg-black p-5 text-white transition hover:opacity-90"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-black text-lg font-bold">
+                  ⭐
+                </div>
+                <div>
+                  <p className="font-semibold">Rate the pick that brought you here</p>
+                  <p className="mt-0.5 text-xs leading-5 text-gray-300">
+                    Did you buy it? Leave a rating now and help others trust the right people.
+                  </p>
+                </div>
+              </a>
+              <a
+                href={`/add?recommenderId=${savedUserId}`}
+                className="flex items-start gap-4 rounded-2xl border border-gray-200 p-5 transition hover:border-gray-300 hover:shadow-sm"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-700 text-lg font-bold">2</div>
+                <div>
+                  <p className="font-semibold text-gray-900">Add your first pick</p>
+                  <p className="mt-0.5 text-xs leading-5 text-gray-500">Share something you genuinely recommend and start building your reputation.</p>
+                </div>
+              </a>
+              <a
+                href={`/recommenders/${savedUserId}`}
+                className="flex items-start gap-4 rounded-2xl border border-gray-200 p-5 transition hover:border-gray-300 hover:shadow-sm"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-700 text-lg font-bold">3</div>
+                <div>
+                  <p className="font-semibold text-gray-900">View your profile</p>
+                  <p className="mt-0.5 text-xs leading-5 text-gray-500">See how your profile looks. Grab your QR code and share it.</p>
+                </div>
+              </a>
+            </>
+          ) : (
+            <>
+              <a
+                href={`/add?recommenderId=${savedUserId}`}
+                className="flex items-start gap-4 rounded-2xl border-2 border-black bg-black p-5 text-white transition hover:opacity-90"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-black text-lg font-bold">1</div>
+                <div>
+                  <p className="font-semibold">Add your first pick</p>
+                  <p className="mt-0.5 text-xs leading-5 text-gray-300">Paste a link to something you genuinely recommend. Your first pick earns you your first badge.</p>
+                </div>
+              </a>
+              <a
+                href={`/recommenders/${savedUserId}`}
+                className="flex items-start gap-4 rounded-2xl border border-gray-200 p-5 transition hover:border-gray-300 hover:shadow-sm"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-700 text-lg font-bold">2</div>
+                <div>
+                  <p className="font-semibold text-gray-900">View your profile</p>
+                  <p className="mt-0.5 text-xs leading-5 text-gray-500">See how your profile looks to others. Grab your QR code and share it with someone today.</p>
+                </div>
+              </a>
+              <a
+                href="/discover"
+                className="flex items-start gap-4 rounded-2xl border border-gray-200 p-5 transition hover:border-gray-300 hover:shadow-sm"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-700 text-lg font-bold">3</div>
+                <div>
+                  <p className="font-semibold text-gray-900">Explore other sharers</p>
+                  <p className="mt-0.5 text-xs leading-5 text-gray-500">Browse picks from real people. Rate something you&apos;ve already bought and help build the community.</p>
+                </div>
+              </a>
+            </>
+          )}
         </div>
+
         <div className="mt-6 rounded-2xl border border-green-200 bg-green-50 px-5 py-4">
           <p className="text-sm font-semibold text-green-800">🌱 You&apos;re a Founding Sharer</p>
           <p className="mt-1 text-xs leading-5 text-green-700">You joined GoodShare during beta. This badge will always be on your profile — a mark of the people who were here first.</p>
         </div>
-        <button onClick={() => router.push("/")} className="mt-6 text-sm text-gray-400 underline underline-offset-4 transition hover:text-gray-600">Go to home page</button>
+
+        <button
+          onClick={() => router.push("/")}
+          className="mt-6 text-sm text-gray-400 underline underline-offset-4 transition hover:text-gray-600"
+        >
+          Go to home page
+        </button>
       </div>
     );
   }
 
+  // ── Profile form ──
   return (
     <div className="rounded-2xl border border-gray-200 p-6 shadow-sm">
       <div className="mb-6">
