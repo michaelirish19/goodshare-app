@@ -135,7 +135,7 @@ export default function LoginPage() {
           disabled={loading}
           className="mb-6 flex w-full items-center justify-center gap-3 rounded-2xl border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
         >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path d="M17.64 9.20455C17.64 8.56636 17.5827 7.95273 17.4764 7.36364H9V10.845H13.8436C13.635 11.97 13.0009 12.9232 12.0477 13.5614V15.8195H14.9564C16.6582 14.2527 17.64 11.9455 17.64 9.20455Z" fill="#4285F4"/>
             <path d="M9 18C11.43 18 13.4673 17.1941 14.9564 15.8195L12.0477 13.5614C11.2418 14.1014 10.2109 14.4205 9 14.4205C6.65591 14.4205 4.67182 12.8373 3.96409 10.71H0.957275V13.0418C2.43818 15.9832 5.48182 18 9 18Z" fill="#34A853"/>
             <path d="M3.96409 10.71C3.78409 10.17 3.68182 9.59318 3.68182 9C3.68182 8.40682 3.78409 7.83 3.96409 7.29V4.95818H0.957275C0.347727 6.17318 0 7.54773 0 9C0 10.4523 0.347727 11.8268 0.957275 13.0418L3.96409 10.71Z" fill="#FBBC05"/>
@@ -152,9 +152,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800">
-              Email
-            </label>
+            <label className="mb-2 block text-sm font-medium text-gray-800">Email</label>
             <input
               type="email"
               className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-gray-900"
@@ -167,9 +165,15 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800">
-              Password
-            </label>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-800">Password</label>
+              <a
+                href="/forgot-password"
+                className="text-xs font-medium text-gray-500 underline underline-offset-4 hover:text-black transition"
+              >
+                Forgot password?
+              </a>
+            </div>
             <input
               type="password"
               className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-gray-900"
