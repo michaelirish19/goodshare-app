@@ -23,19 +23,19 @@
   ],
   "categories": ["lifestyle", "social", "shopping"],
   "shortcuts": [
-    {
-      "name": "Add a Pick",
-      "short_name": "Add Pick",
-      "description": "Add a new recommendation",
-      "url": "/add",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Discover",
-      "short_name": "Discover",
-      "description": "Browse sharers and picks",
-      "url": "/discover",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
-    }
-  ]
+  {
+    "name": "Add a Pick",
+    "short_name": "Add Pick",
+    "description": "Add a new recommendation",
+    "url": "/add",
+    "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+  },
+  {
+    "name": "Share My Profile",
+    "short_name": "Share",
+    "description": "Open your QR code and share links",
+    "url": "/?share=true",
+    "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+  }
+]
 }
