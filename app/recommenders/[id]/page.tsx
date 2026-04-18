@@ -6,6 +6,7 @@ import TrustMeter from "../../components/TrustMeter";
 import BadgeDisplay from "../../components/BadgeDisplay";
 import ProfileOwnerCheck from "../../components/ProfileOwnerCheck";
 import OwnerOnlyChecklist from "../../components/OwnerOnlyChecklist";
+import OwnerSavedPicks from "../../components/OwnerSavedPicks";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 
 type Recommender = {
@@ -89,7 +90,6 @@ export default async function RecommenderPage({ params }: PageProps) {
           Back to GoodShare
         </a>
 
-        {/* Onboarding checklist — only shown to owner, disappears when complete */}
         <OwnerOnlyChecklist
           profileUserId={recommender.userId}
           recommenderId={id}
@@ -161,6 +161,9 @@ export default async function RecommenderPage({ params }: PageProps) {
           categories={parsedCategories}
           recommenderName={recommender.name}
         />
+
+        {/* Saved picks — only visible to owner */}
+        <OwnerSavedPicks profileUserId={recommender.userId} />
 
       </div>
     </main>

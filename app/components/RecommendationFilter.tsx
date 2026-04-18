@@ -4,6 +4,7 @@ import { useState } from "react";
 import RecommendationCardQR from "./RecommendationCardQR";
 import OwnerControls from "./OwnerControls";
 import ShareButton from "./ShareButton";
+import BookmarkButton from "./BookmarkButton";
 
 type Recommendation = {
   id: string;
@@ -59,33 +60,24 @@ export default function RecommendationFilter({
         ] as const
     );
 
-  // ── Empty state — zero picks total ──
   if (recommendations.length === 0) {
     if (isOwner) {
       return (
         <section className="mt-8">
           <div className="rounded-2xl border-2 border-dashed border-gray-200 px-6 py-12 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-2xl">
-              📌
-            </div>
-            <h3 className="text-lg font-bold text-gray-900">
-              Add your first pick
-            </h3>
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-2xl">📌</div>
+            <h3 className="text-lg font-bold text-gray-900">Add your first pick</h3>
             <p className="mt-2 max-w-sm mx-auto text-sm leading-6 text-gray-500">
               Your picks are your recommendations — the products, tools, and resources you genuinely use and trust. Start building your reputation.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <a
-                href={`/add?recommenderId=${recommenderId}`}
-                className="inline-flex items-center justify-center rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:opacity-80"
-              >
+              <a href={`/add?recommenderId=${recommenderId}`}
+                className="inline-flex items-center justify-center rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:opacity-80">
                 Add your first pick →
               </a>
             </div>
             <div className="mt-8 border-t border-gray-100 pt-6">
-              <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">
-                Here&apos;s how it works
-              </p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">Here&apos;s how it works</p>
               <div className="flex flex-col gap-3 sm:flex-row sm:gap-6 text-left max-w-lg mx-auto">
                 <div className="flex gap-3">
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-500">1</span>
@@ -109,9 +101,7 @@ export default function RecommendationFilter({
     return (
       <section className="mt-8">
         <div className="rounded-2xl border border-dashed border-gray-200 px-6 py-12 text-center">
-          <p className="text-sm font-medium text-gray-400">
-            {recommenderName} hasn&apos;t added any picks yet.
-          </p>
+          <p className="text-sm font-medium text-gray-400">{recommenderName} hasn&apos;t added any picks yet.</p>
           <p className="mt-1 text-xs text-gray-400">Check back soon.</p>
         </div>
       </section>
@@ -130,9 +120,7 @@ export default function RecommendationFilter({
           <button
             onClick={() => setSelectedCategory("All")}
             className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-              selectedCategory === "All"
-                ? "bg-black text-white"
-                : "border border-gray-200 text-gray-600 hover:bg-gray-50"
+              selectedCategory === "All" ? "bg-black text-white" : "border border-gray-200 text-gray-600 hover:bg-gray-50"
             }`}
           >
             All
@@ -142,9 +130,7 @@ export default function RecommendationFilter({
               key={category}
               onClick={() => setSelectedCategory(category)}
               className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-                selectedCategory === category
-                  ? "bg-black text-white"
-                  : "border border-gray-200 text-gray-600 hover:bg-gray-50"
+                selectedCategory === category ? "bg-black text-white" : "border border-gray-200 text-gray-600 hover:bg-gray-50"
               }`}
             >
               {category}
@@ -158,9 +144,7 @@ export default function RecommendationFilter({
           {sortedEntries.map(([category, items]) => (
             <div key={category}>
               <div className="mb-3 flex items-center gap-3">
-                <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-                  {category}
-                </h3>
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400">{category}</h3>
                 <div className="h-px flex-1 bg-gray-100" />
                 <span className="text-xs text-gray-400">{items.length}</span>
               </div>
@@ -189,9 +173,7 @@ export default function RecommendationFilter({
                     </div>
 
                     {item.description && (
-                      <p className="mb-4 text-sm leading-6 text-gray-600">
-                        {item.description}
-                      </p>
+                      <p className="mb-4 text-sm leading-6 text-gray-600">{item.description}</p>
                     )}
 
                     <div className="flex flex-wrap items-center gap-2">
@@ -207,6 +189,12 @@ export default function RecommendationFilter({
                       >
                         Rate this pick
                       </a>
+                      <BookmarkButton
+                        recommenderId={recommenderId}
+                        recommendationId={item.id}
+                        pickTitle={item.title}
+                        recommenderName={recommenderName}
+                      />
                       <ShareButton
                         title={item.title}
                         url={`https://goodshare-app.vercel.app/go/${recommenderId}/${item.id}`}
@@ -231,9 +219,7 @@ export default function RecommendationFilter({
         </div>
       ) : (
         <div className="rounded-2xl border border-dashed border-gray-200 px-6 py-10 text-center">
-          <p className="text-sm font-medium text-gray-400">
-            No picks in this category yet.
-          </p>
+          <p className="text-sm font-medium text-gray-400">No picks in this category yet.</p>
           {isOwner && (
             <a
               href={`/add?recommenderId=${recommenderId}`}
