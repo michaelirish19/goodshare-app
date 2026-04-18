@@ -7,6 +7,8 @@ import BadgeDisplay from "../../components/BadgeDisplay";
 import ProfileOwnerCheck from "../../components/ProfileOwnerCheck";
 import OwnerOnlyChecklist from "../../components/OwnerOnlyChecklist";
 import OwnerSavedPicks from "../../components/OwnerSavedPicks";
+import FollowButton from "../../components/FollowButton";
+import FollowerStats from "../../components/FollowerStats";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 
 type Recommender = {
@@ -22,6 +24,8 @@ type Recommender = {
   totalOutboundClickCount?: number;
   referralCount?: number;
   isBetaUser?: boolean;
+  followerCount?: number;
+  followingCount?: number;
 };
 
 type Recommendation = {
@@ -33,9 +37,7 @@ type Recommendation = {
 };
 
 type PageProps = {
-  params: Promise<{
-    id: string;
-  }>;
+  params: Promise<{ id: string }>;
 };
 
 export default async function RecommenderPage({ params }: PageProps) {
@@ -48,9 +50,7 @@ export default async function RecommenderPage({ params }: PageProps) {
     return (
       <main className="min-h-screen bg-white px-6 py-10 text-black">
         <div className="mx-auto max-w-3xl">
-          <a href="/" className="mb-6 inline-block text-sm text-gray-500 hover:text-black">
-            Back to GoodShare
-          </a>
+          <a href="/" className="mb-6 inline-block text-sm text-gray-500 hover:text-black">Back to GoodShare</a>
           <h1 className="text-2xl font-bold">Sharer not found</h1>
         </div>
       </main>
@@ -68,19 +68,11 @@ export default async function RecommenderPage({ params }: PageProps) {
   });
 
   const parsedCategories = Array.from(
-    new Set(
-      recommendations
-        .map((r) => r.category?.trim())
-        .filter(Boolean)
-    )
+    new Set(recommendations.map((r) => r.category?.trim()).filter(Boolean))
   ).sort((a, b) => a.localeCompare(b)) as string[];
 
   const initials = recommender.name
-    .split(" ")
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+    .split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
   return (
     <main className="min-h-screen bg-white px-4 py-10 text-black sm:px-6">
@@ -112,11 +104,22 @@ export default async function RecommenderPage({ params }: PageProps) {
               </div>
             </div>
 
-            <div className="flex gap-6 sm:flex-col sm:items-end sm:gap-2">
-              <div className="text-center sm:text-right">
-                <p className="text-2xl font-bold">{recommendations.length}</p>
-                <p className="text-xs text-gray-500">Picks</p>
+            <div className="flex flex-col items-end gap-3">
+              {/* Follow button — only shows to logged-in non-owners */}
+              {recommender.userId && (
+                <FollowButton
+                  profileUserId={recommender.userId}
+                  profileName={recommender.name}
+                />
+              )}
+              <div className="flex gap-6">
+                <div className="text-center sm:text-right">
+                  <p className="text-2xl font-bold">{recommendations.length}</p>
+                  <p className="text-xs text-gray-500">Picks</p>
+                </div>
               </div>
+              {/* Follower/following counts — visible to everyone */}
+              <FollowerStats recommenderId={id} />
             </div>
           </div>
 
@@ -139,6 +142,8 @@ export default async function RecommenderPage({ params }: PageProps) {
               totalOutboundClickCount: recommender.totalOutboundClickCount,
               referralCount: recommender.referralCount,
               isBetaUser: recommender.isBetaUser,
+              followerCount: recommender.followerCount,
+              followingCount: recommender.followingCount,
             }}
             recommendationCount={recommendations.length}
           />
@@ -162,7 +167,6 @@ export default async function RecommenderPage({ params }: PageProps) {
           recommenderName={recommender.name}
         />
 
-        {/* Saved picks — only visible to owner */}
         <OwnerSavedPicks profileUserId={recommender.userId} />
 
       </div>
