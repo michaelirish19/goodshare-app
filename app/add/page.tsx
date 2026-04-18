@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { writeActivity } from "@/lib/writeActivity";
+import { writeActivity, incrementPickCount } from "@/lib/writeActivity";
+await incrementPickCount();
 
 type PreviewData = {
   title: string;

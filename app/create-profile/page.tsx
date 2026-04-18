@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, getDoc, setDoc, updateDoc, increment, serverTimestamp } from "firebase/firestore";
-import { writeActivity } from "@/lib/writeActivity";
+import { writeActivity, incrementSharerCount } from "@/lib/writeActivity";
+await incrementSharerCount();
 
 function CreateProfileForm() {
   const router = useRouter();

@@ -3,6 +3,7 @@ import HomepageActions from "./components/HomepageActions";
 import JoinGoodShareButton from "./components/JoinGoodShareButton";
 import TopSharers from "./components/TopSharers";
 import ActivityFeed from "./components/ActivityFeed";
+import LiveStats from "./components/LiveStats";
 
 export default function Home() {
   return (
@@ -31,11 +32,8 @@ export default function Home() {
             Discover tools, products, and resources recommended by people who actually use them.
           </p>
 
-          <div className="mb-8 flex gap-8 border-y border-gray-100 py-5">
-            <div><p className="text-2xl font-bold">47</p><p className="text-xs text-gray-500">Sharers</p></div>
-            <div><p className="text-2xl font-bold">312</p><p className="text-xs text-gray-500">Picks</p></div>
-            <div><p className="text-2xl font-bold">1.2k</p><p className="text-xs text-gray-500">Clicks tracked</p></div>
-          </div>
+          {/* Live stats */}
+          <LiveStats />
 
           <div className="mb-8 rounded-2xl border border-gray-100 bg-gray-50 p-6">
             <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400">How it works</p>

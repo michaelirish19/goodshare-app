@@ -1,4 +1,4 @@
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, doc, increment, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "./firebase";
 
 export type ActivityType =
@@ -29,7 +29,33 @@ export async function writeActivity(
       createdAt: serverTimestamp(),
     });
   } catch (err) {
-    // Never block the main action if activity write fails
     console.error("Activity write failed:", err);
   }
+}
+
+async function incrementStat(field: string, amount = 1) {
+  try {
+    const ref = doc(db, "stats", "global");
+    await updateDoc(ref, { [field]: increment(amount) });
+  } catch {
+    // Document might not exist yet — create it
+    try {
+      const ref = doc(db, "stats", "global");
+      await setDoc(ref, { [field]: amount }, { merge: true });
+    } catch (err) {
+      console.error("Stat increment failed:", err);
+    }
+  }
+}
+
+export async function incrementPickCount() {
+  await incrementStat("totalPicks");
+}
+
+export async function incrementSharerCount() {
+  await incrementStat("totalSharers");
+}
+
+export async function incrementClickCount(amount = 1) {
+  await incrementStat("totalClicks", amount);
 }
