@@ -2,6 +2,8 @@ import { db } from "../../../../firebase";
 import OwnerControls from "../../../../components/OwnerControls";
 import QRCodeCard from "../../../../components/QRCodeCard";
 import PickDetailActions from "../../../../components/PickDetailActions";
+import PickReviews from "../../../../components/PickReviews";
+import PickComments from "../../../../components/PickComments";
 import { doc, getDoc } from "firebase/firestore";
 
 type Recommender = {
@@ -49,13 +51,7 @@ export default async function RecommendationPage({ params }: PageProps) {
 
   const recommender = recommenderSnap.data() as Recommender;
 
-  const recommendationRef = doc(
-    db,
-    "recommenders",
-    id,
-    "recommendations",
-    recommendationId
-  );
+  const recommendationRef = doc(db, "recommenders", id, "recommendations", recommendationId);
   const recommendationSnap = await getDoc(recommendationRef);
 
   if (!recommendationSnap.exists()) {
@@ -84,6 +80,7 @@ export default async function RecommendationPage({ params }: PageProps) {
           Back to {recommender.name}&apos;s picks
         </a>
 
+        {/* ── Pick detail card ── */}
         <section className="rounded-2xl border border-gray-200 p-6 shadow-sm">
 
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
@@ -118,6 +115,18 @@ export default async function RecommendationPage({ params }: PageProps) {
             recommenderName={recommender.name}
             pickTitle={recommendation.title}
             pickNote={recommendation.description}
+          />
+
+          {/* ── Verified Reviews ── */}
+          <PickReviews
+            recommenderId={id}
+            recommendationId={recommendationId}
+          />
+
+          {/* ── Community Comments ── */}
+          <PickComments
+            recommenderId={id}
+            recommendationId={recommendationId}
           />
 
         </section>
