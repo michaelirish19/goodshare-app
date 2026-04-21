@@ -27,8 +27,8 @@ export default function OnboardingChecklist({
       label: "Get your first click",
       description: "Share your profile or QR code and get someone to click a pick.",
       done: totalOutboundClickCount >= 1,
-      href: `/recommenders/${recommenderId}`,
-      cta: "View your profile →",
+      href: null,
+      cta: "Share your profile →",
     },
     {
       id: "rating",
@@ -43,7 +43,6 @@ export default function OnboardingChecklist({
   const completedCount = steps.filter((s) => s.done).length;
   const allDone = completedCount === steps.length;
 
-  // Hide completely once all steps are done
   if (allDone) return null;
 
   return (
@@ -57,7 +56,6 @@ export default function OnboardingChecklist({
             {completedCount} of {steps.length} steps complete
           </h3>
         </div>
-        {/* Progress bar */}
         <div className="h-2 w-24 overflow-hidden rounded-full bg-gray-200">
           <div
             className="h-full rounded-full bg-black transition-all duration-500"
@@ -74,7 +72,6 @@ export default function OnboardingChecklist({
               step.done ? "opacity-50" : "bg-white border border-gray-200"
             }`}
           >
-            {/* Checkmark or circle */}
             <div
               className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                 step.done
@@ -94,14 +91,24 @@ export default function OnboardingChecklist({
                   <p className="mt-0.5 text-xs leading-5 text-gray-500">
                     {step.description}
                   </p>
-                  <a
-                    href={step.href}
-  className="mt-3 inline-flex items-center justify-center rounded-xl bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:opacity-80"
->
-  {step.cta}
-</a>
- <div className="">
-</div>
+
+                  {/* Share step uses custom event to open ShareHub */}
+                  {step.id === "click" ? (
+                    <button
+                      type="button"
+                      onClick={() => window.dispatchEvent(new CustomEvent("goodshare:open-hub"))}
+                      className="mt-3 inline-flex items-center justify-center rounded-xl bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:opacity-80"
+                    >
+                      {step.cta}
+                    </button>
+                  ) : (
+                    <a
+                      href={step.href ?? "#"}
+                      className="mt-3 inline-flex items-center justify-center rounded-xl bg-black px-5 py-2.5 text-xs font-semibold text-white transition hover:opacity-80"
+                    >
+                      {step.cta}
+                    </a>
+                  )}
                 </>
               )}
             </div>
