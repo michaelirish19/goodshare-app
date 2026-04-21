@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { db } from "../../firebase";
 import OwnerControls from "../../components/OwnerControls";
 import RecommendationFilter from "../../components/RecommendationFilter";
@@ -10,6 +11,9 @@ import OwnerSavedPicks from "../../components/OwnerSavedPicks";
 import FollowButton from "../../components/FollowButton";
 import FollowerStats from "../../components/FollowerStats";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+
+const BASE_URL = "https://goodshare-app.vercel.app";
+const DEFAULT_IMAGE = `${BASE_URL}/icons/icon-512.png`;
 
 type Recommender = {
   name: string;
@@ -39,6 +43,46 @@ type Recommendation = {
 type PageProps = {
   params: Promise<{ id: string }>;
 };
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+
+  try {
+    const recommenderSnap = await getDoc(doc(db, "recommenders", id));
+
+    if (!recommenderSnap.exists()) {
+      return { title: "Sharer not found — GoodShare" };
+    }
+
+    const recommender = recommenderSnap.data() as Recommender;
+    const title = `${recommender.name}'s picks on GoodShare`;
+    const description = recommender.description
+      ? `${recommender.role} · ${recommender.description.slice(0, 150)}${recommender.description.length > 150 ? "…" : ""}`
+      : `${recommender.name} is a ${recommender.role} sharing trusted recommendations on GoodShare.`;
+    const pageUrl = `${BASE_URL}/recommenders/${id}`;
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        url: pageUrl,
+        siteName: "GoodShare",
+        images: [{ url: DEFAULT_IMAGE, width: 512, height: 512, alt: `${recommender.name} on GoodShare` }],
+        type: "profile",
+      },
+      twitter: {
+        card: "summary",
+        title,
+        description,
+        images: [DEFAULT_IMAGE],
+      },
+    };
+  } catch {
+    return { title: "GoodShare — Recommendations from real people" };
+  }
+}
 
 export default async function RecommenderPage({ params }: PageProps) {
   const { id } = await params;
@@ -105,7 +149,6 @@ export default async function RecommenderPage({ params }: PageProps) {
             </div>
 
             <div className="flex flex-col items-end gap-3">
-              {/* Follow button — only shows to logged-in non-owners */}
               {recommender.userId && (
                 <FollowButton
                   profileUserId={recommender.userId}
@@ -118,7 +161,6 @@ export default async function RecommenderPage({ params }: PageProps) {
                   <p className="text-xs text-gray-500">Picks</p>
                 </div>
               </div>
-              {/* Follower/following counts — visible to everyone */}
               <FollowerStats recommenderId={id} />
             </div>
           </div>
@@ -157,7 +199,7 @@ export default async function RecommenderPage({ params }: PageProps) {
           </div>
         </section>
 
-        <QRCodeCard url={`https://goodshare-app.vercel.app/recommenders/${id}`} />
+        <QRCodeCard url={`${BASE_URL}/recommenders/${id}`} />
 
         <ProfileOwnerCheck
           profileUserId={recommender.userId}

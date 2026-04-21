@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { db } from "../../../../firebase";
 import OwnerControls from "../../../../components/OwnerControls";
 import QRCodeCard from "../../../../components/QRCodeCard";
@@ -5,6 +6,9 @@ import PickDetailActions from "../../../../components/PickDetailActions";
 import PickReviews from "../../../../components/PickReviews";
 import PickComments from "../../../../components/PickComments";
 import { doc, getDoc } from "firebase/firestore";
+
+const BASE_URL = "https://goodshare-app.vercel.app";
+const DEFAULT_IMAGE = `${BASE_URL}/icons/icon-512.png`;
 
 type Recommender = {
   name: string;
@@ -29,6 +33,52 @@ type PageProps = {
     recommendationId: string;
   }>;
 };
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id, recommendationId } = await params;
+
+  try {
+    const recommenderSnap = await getDoc(doc(db, "recommenders", id));
+    const recommendationSnap = await getDoc(
+      doc(db, "recommenders", id, "recommendations", recommendationId)
+    );
+
+    if (!recommenderSnap.exists() || !recommendationSnap.exists()) {
+      return { title: "Pick not found — GoodShare" };
+    }
+
+    const recommender = recommenderSnap.data() as Recommender;
+    const recommendation = recommendationSnap.data() as Recommendation;
+
+    const title = `${recommendation.title} — recommended by ${recommender.name}`;
+    const description = recommendation.description
+      ? `${recommender.name} says: "${recommendation.description.slice(0, 150)}${recommendation.description.length > 150 ? "…" : ""}"`
+      : `${recommender.name} recommends this on GoodShare.`;
+    const image = recommendation.image || DEFAULT_IMAGE;
+    const pageUrl = `${BASE_URL}/recommenders/${id}/recommendations/${recommendationId}`;
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        url: pageUrl,
+        siteName: "GoodShare",
+        images: [{ url: image, width: 1200, height: 630, alt: recommendation.title }],
+        type: "article",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: [image],
+      },
+    };
+  } catch {
+    return { title: "GoodShare — Recommendations from real people" };
+  }
+}
 
 export default async function RecommendationPage({ params }: PageProps) {
   const { id, recommendationId } = await params;
@@ -80,7 +130,6 @@ export default async function RecommendationPage({ params }: PageProps) {
           Back to {recommender.name}&apos;s picks
         </a>
 
-        {/* ── Pick detail card ── */}
         <section className="rounded-2xl border border-gray-200 p-6 shadow-sm">
 
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
@@ -117,13 +166,11 @@ export default async function RecommendationPage({ params }: PageProps) {
             pickNote={recommendation.description}
           />
 
-          {/* ── Verified Reviews ── */}
           <PickReviews
             recommenderId={id}
             recommendationId={recommendationId}
           />
 
-          {/* ── Community Comments ── */}
           <PickComments
             recommenderId={id}
             recommendationId={recommendationId}
@@ -132,7 +179,7 @@ export default async function RecommendationPage({ params }: PageProps) {
         </section>
 
         <QRCodeCard
-          url={`https://goodshare-app.vercel.app/go/${id}/${recommendationId}`}
+          url={`${BASE_URL}/go/${id}/${recommendationId}`}
           title="Share this pick"
         />
 
