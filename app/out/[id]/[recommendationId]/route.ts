@@ -84,6 +84,11 @@ const rawTargetUrl =
         lastOutboundClickAt: FieldValue.serverTimestamp(),
       });
 
+      const statsRef = adminDb.collection("stats").doc("global");
+batch.update(statsRef, {
+  totalClicks: FieldValue.increment(1),
+});
+
       await batch.commit();
     } catch (loggingError) {
       console.error("Outbound click logging failed:", loggingError);

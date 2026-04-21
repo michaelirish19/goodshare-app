@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp } from "firebase/firestore";
+import {
+  addDoc, collection, deleteDoc, doc,
+  getDoc, onSnapshot, orderBy, query, serverTimestamp
+} from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
 
@@ -43,10 +46,8 @@ export default function PickComments({ recommenderId, recommendationId }: Props)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Get their display name from Firestore
-        const { doc: d, getDoc } = await import("firebase/firestore");
         try {
-          const profileSnap = await getDoc(d(db, "recommenders", user.uid));
+          const profileSnap = await getDoc(doc(db, "recommenders", user.uid));
           const name = profileSnap.exists()
             ? profileSnap.data().name
             : user.displayName || user.email || "Anonymous";
@@ -123,7 +124,6 @@ export default function PickComments({ recommenderId, recommendationId }: Props)
         </h2>
       </div>
 
-      {/* Comment list */}
       {!loading && comments.length > 0 && (
         <div className="mb-6 space-y-3">
           {comments.map((comment) => (
@@ -169,7 +169,6 @@ export default function PickComments({ recommenderId, recommendationId }: Props)
         </div>
       )}
 
-      {/* Comment input */}
       {currentUser ? (
         <form onSubmit={handleSubmit} className="flex items-start gap-3">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-xs font-bold text-gray-600">

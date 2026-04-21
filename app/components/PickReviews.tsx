@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import { collection, onSnapshot, orderBy, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 
 type Rating = {
@@ -46,15 +46,17 @@ export default function PickReviews({ recommenderId, recommendationId }: Props) 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Query ratings collection filtered by this pick
-    const { collection: col, query: q, where, orderBy: ob, onSnapshot: snap } = require("firebase/firestore");
-    const ratingsRef = col(db, "ratings");
-    const rq = q(ratingsRef, where("recommendationId", "==", recommendationId), ob("createdAt", "desc"));
-    
-    const unsubscribe = snap(rq, (snapshot: any) => {
-      const data: Rating[] = snapshot.docs.map((d: any) => ({
+    const ratingsRef = collection(db, "ratings");
+    const q = query(
+      ratingsRef,
+      where("recommendationId", "==", recommendationId),
+      orderBy("createdAt", "desc")
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data: Rating[] = snapshot.docs.map((d) => ({
         id: d.id,
-        ...d.data(),
+        ...(d.data() as Omit<Rating, "id">),
       }));
       setRatings(data);
       setLoading(false);
