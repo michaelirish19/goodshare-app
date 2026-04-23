@@ -6,7 +6,6 @@ import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from "fir
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { writeActivity, incrementPickCount } from "@/lib/writeActivity";
-await incrementPickCount();
 
 type PreviewData = {
   title: string;
@@ -352,7 +351,7 @@ setSaved(true);
               </div>
               <textarea id="notes" rows={4} placeholder={NOTE_PROMPTS[promptIndex]} value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className={`w-full rounded-2xl border px-4 py-3 text-base outline-none transition focus:border-neutral-900 ${isListening ? "border-red-300 bg-red-50" : "border-neutral-300 bg-neutral-50"}`}
+                className={`w-full rounded-2xl border px-4 py-3 text-base text-neutral-900 outline-none transition focus:border-neutral-900 ${isListening ? "border-red-300 bg-red-50" : "border-neutral-300 bg-white"}`}
               />
               <div className="mt-2 flex items-center justify-between">
                 <span className={`text-xs font-medium ${noteEncouragement.color}`}>{noteEncouragement.text}</span>
