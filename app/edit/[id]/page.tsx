@@ -26,6 +26,7 @@ export default function EditRecommendationPage() {
   const [description, setDescription] = useState("");
   const [url, setUrl] = useState("");
   const [category, setCategory] = useState("");
+  const [customCategory, setCustomCategory] = useState("");
   const [recommenderId, setRecommenderId] = useState(recommenderIdFromQuery);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -53,10 +54,17 @@ export default function EditRecommendationPage() {
           const data = docSnap.data();
           setTitle(data.title || "");
           setDescription(data.description || "");
-          // handle both url and link field names
           setUrl(data.url || data.link || "");
-          setCategory(data.category || "");
           setRecommenderId(recommenderIdFromQuery);
+
+          // If the saved category matches a preset option use it
+          // otherwise put it in the custom field
+          const savedCategory = data.category || "";
+          if (CATEGORY_OPTIONS.includes(savedCategory)) {
+            setCategory(savedCategory);
+          } else {
+            setCustomCategory(savedCategory);
+          }
         }
       } catch (error) {
         console.error("Error loading recommendation:", error);
@@ -67,6 +75,8 @@ export default function EditRecommendationPage() {
 
     fetchData();
   }, [id, recommenderIdFromQuery]);
+
+  const finalCategory = customCategory.trim() || category;
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,7 +107,7 @@ export default function EditRecommendationPage() {
         title: title.trim(),
         description: description.trim(),
         url: url.trim(),
-        category: category.trim(),
+        category: finalCategory,
       });
 
       router.push(`/recommenders/${recommenderId}`);
@@ -139,7 +149,7 @@ export default function EditRecommendationPage() {
 
         <form onSubmit={handleUpdate} className="space-y-5">
 
-          {/* Title — required */}
+          {/* Title */}
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-800">
               Title <span className="text-gray-400">(required)</span>
@@ -152,7 +162,7 @@ export default function EditRecommendationPage() {
             />
           </div>
 
-          {/* URL — optional */}
+          {/* URL */}
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-800">
               Link <span className="text-gray-400">(optional)</span>
@@ -168,7 +178,7 @@ export default function EditRecommendationPage() {
             />
           </div>
 
-          {/* Category pills */}
+          {/* Category */}
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-800">
               Category <span className="text-gray-400">(optional)</span>
@@ -178,33 +188,51 @@ export default function EditRecommendationPage() {
                 <button
                   key={option}
                   type="button"
-                  onClick={() => setCategory(option)}
+                  onClick={() => {
+                    setCategory(option);
+                    setCustomCategory("");
+                  }}
                   className={
-                    option === category
+                    option === category && !customCategory.trim()
                       ? "inline-flex items-center rounded-full bg-gray-900 px-3 py-1 text-xs font-semibold text-white"
-                      : "inline-flex items-center rounded-full border border-gray-300 bg-white px-3 py-1 text-xs font-medium text-gray-700"
+                      : "inline-flex items-center rounded-full border border-gray-300 bg-white px-3 py-1 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
                   }
                 >
                   {option}
                 </button>
               ))}
             </div>
+            <input
+              type="text"
+              placeholder="Or type a custom category…"
+              value={customCategory}
+              onChange={(e) => {
+                setCustomCategory(e.target.value);
+                if (e.target.value.trim()) setCategory("");
+              }}
+              className="mt-3 w-full rounded-2xl border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-gray-900"
+            />
+            {customCategory.trim() && (
+              <p className="mt-1.5 text-xs text-gray-500">
+                Will be saved as: <strong>{customCategory.trim()}</strong>
+              </p>
+            )}
           </div>
 
-          {/* Description — optional */}
+          {/* Notes */}
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-800">
-  Notes <span className="text-gray-400">(optional)</span>
-</label>
-<p className="mb-2 text-xs text-gray-500">
-  This will appear on your pick as "Why you recommend this." Tell people what makes it worth it in your own words.
-</p>
-<textarea
-  className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-gray-900"
-  rows={4}
-  value={description}
-  onChange={(e) => setDescription(e.target.value)}
-  placeholder="e.g. I've used this for 2 years and it's the best I've found. Changed how I work completely."
+              Notes <span className="text-gray-400">(optional)</span>
+            </label>
+            <p className="mb-2 text-xs text-gray-500">
+              This will appear on your pick as "Why you recommend this." Tell people what makes it worth it in your own words.
+            </p>
+            <textarea
+              className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-gray-900"
+              rows={4}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="e.g. I've used this for 2 years and it's the best I've found. Changed how I work completely."
             />
           </div>
 

@@ -21,13 +21,8 @@ export default function OwnerControls({
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && profileUserId && user.uid === profileUserId) {
-        setCanEdit(true);
-      } else {
-        setCanEdit(false);
-      }
+      setCanEdit(!!user && !!profileUserId && user.uid === profileUserId);
     });
-
     return () => unsubscribe();
   }, [profileUserId]);
 
@@ -35,12 +30,20 @@ export default function OwnerControls({
 
   if (type === "profile") {
     return (
-      <a
-        href={`/add?recommenderId=${recommenderId}`}
-        className="mt-4 inline-block rounded-lg bg-black px-4 py-2 text-sm font-medium text-white"
-      >
-        Add a Pick
-      </a>
+      <div className="mt-4 flex flex-wrap gap-3">
+        <a
+          href={`/add?recommenderId=${recommenderId}`}
+          className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-80"
+        >
+          Add a Pick
+        </a>
+        <a
+          href="/edit-profile"
+          className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+        >
+          Edit Profile
+        </a>
+      </div>
     );
   }
 
@@ -50,14 +53,13 @@ export default function OwnerControls({
     <div className="mt-4 flex gap-3">
       <a
         href={`/edit/${recommendationId}?recommenderId=${recommenderId}`}
-        className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium"
+        className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium transition hover:bg-gray-50"
       >
         Edit
       </a>
-
       <a
         href={`/delete/${recommendationId}?recommenderId=${recommenderId}`}
-        className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600"
+        className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
       >
         Delete
       </a>
