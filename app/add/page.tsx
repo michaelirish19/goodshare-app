@@ -377,7 +377,7 @@ setSaved(true);
               </div>
               <input type="text" placeholder="Or type a custom category…" value={customCategory}
                 onChange={(e) => setCustomCategory(e.target.value)}
-                className="mt-3 w-full rounded-2xl border border-neutral-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-neutral-900"
+                className="mt-3 w-full rounded-2xl border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-900 outline-none transition focus:border-neutral-900"
               />
               {customCategory.trim() && (
                 <p className="mt-1.5 text-xs text-neutral-500">Will be saved as: <strong>{customCategory.trim()}</strong></p>
@@ -395,7 +395,7 @@ setSaved(true);
                 <div className="mt-3">
                   <input id="title" type="text" placeholder="Auto-generated — only change if needed" value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-base outline-none transition focus:border-neutral-900"
+                    className="w-full rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-base text-neutral-900 outline-none transition focus:border-neutral-900"
                   />
                 </div>
               )}
